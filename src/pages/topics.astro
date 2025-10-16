@@ -1,0 +1,98 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "../layouts/main.astro";
+import PageHeading from "../components/page-heading.astro";
+
+const allPosts = await getCollection("post");
+
+function parseDate(dateStr) {
+  const [month, day, year] = dateStr.split(" ");
+  return new Date(`${month} ${parseInt(day)}, ${year}`);
+}
+
+const sortedPosts = allPosts
+  .map((post) => ({
+    ...post,
+    date: parseDate(post.data.dateFormatted),
+  }))
+  .sort((a, b) => b.date.getTime() - a.date.getTime());
+
+// Get all unique topics
+const topics = [...new Set(sortedPosts.map(post => post.data.topic))].sort();
+
+// Get posts for each topic
+const postsByTopic = {};
+topics.forEach(topic => {
+  postsByTopic[topic] = sortedPosts.filter(post => post.data.topic === topic);
+});
+
+// Topic images
+const topicData = {
+  "Threat Hunting": {
+    image: "/assets/images/topics/threathunt.png"
+  }
+};
+
+function getTopicSlug(topic) {
+  return topic.toLowerCase().replace(/\s+/g, '').replace(/[&]/g, 'and');
+}
+---
+
+<Layout title="Topics">
+  <main class="min-h-screen flex flex-col">
+    <section class="relative z-20 max-w-6xl mx-auto my-12 px-7 lg:px-0 flex-1">
+    <PageHeading
+      title="Topics"
+      description="Explore posts organized by topic. Click on any topic to see all related posts."
+    />
+
+    <div class="z-50 grid grid-cols-1 md:grid-cols-2 gap-6 my-8 animate-stagger">
+      {topics.map((topic) => {
+        const topicSlug = getTopicSlug(topic);
+        const data = topicData[topic] || {
+          image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&h=300&fit=crop&crop=center"
+        };
+        
+        return (
+          <a 
+            href={`/topics/${topicSlug}`}
+            class="group relative overflow-hidden glass-card liquid-glass rounded-2xl transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20 hover:rotate-1"
+          >
+            <div class="aspect-[4/3] overflow-hidden">
+              <img 
+                src={data.image} 
+                alt={topic}
+                class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 group-hover:brightness-110"
+                loading="lazy"
+              />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+            </div>
+            
+            <div class="absolute bottom-0 left-0 right-0 p-6 text-white">
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="text-xl font-bold group-hover:text-blue-300 transition-colors">
+                  {topic}
+                </h3>
+                <span class="px-2 py-1 text-xs font-semibold bg-blue-500/20 backdrop-blur-sm border border-blue-400/30 rounded-full text-blue-100">
+                  {postsByTopic[topic].length} {postsByTopic[topic].length === 1 ? 'post' : 'posts'}
+                </span>
+              </div>
+            </div>
+            
+            <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-500 group-hover:translate-x-1">
+              <svg
+                class="w-6 h-6 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </a>
+        );
+      })}
+    </div>
+    </section>
+  </main>
+</Layout>

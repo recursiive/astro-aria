@@ -1,0 +1,234 @@
+---
+// No server-side props needed for this component
+---
+
+<div id="dots-canvas" class="fixed left-0 right-0 top-0 bottom-0 pointer-events-none -z-10"></div>
+
+<script>
+  let canvas;
+  let ctx;
+  let animationId;
+  let points = [];
+  let frameCount = 0;
+  let lastBurstTime = 0;
+  let activeBursts = [];
+
+  const SCALE = 400;
+  const LENGTH = 3;
+  const SPACING = 20;
+  const TARGET_FRAMERATE = 5;
+  const TIMESCALE = 2;
+  const OPACITY = 0.7;
+  const BURST_INTERVAL = 5000; // 5 seconds in milliseconds
+  const BURST_DURATION = 3000; // 3 seconds burst duration
+  const BURST_DOT_COUNT = 12; // Number of colored dots in each burst
+
+  let w = window.innerWidth;
+  let h = window.innerHeight;
+
+  // Improved Perlin-like noise function for better wave effects
+  function noise(x, y, z) {
+    // Multiple octaves for more natural noise
+    let value = 0;
+    value += Math.sin(x * 0.01 + z * 0.1) * 0.5;
+    value += Math.sin(y * 0.01 + z * 0.15) * 0.3;
+    value += Math.sin((x + y) * 0.005 + z * 0.05) * 0.2;
+    return value * 0.5 + 0.5;
+  }
+
+  function getForceOnPoint(x, y, z) {
+    return (noise(x / SCALE, y / SCALE, z) - 0.5) * 2 * Math.PI * 2;
+  }
+
+  function addPoints() {
+    points = [];
+    for (let x = -SPACING / 2; x < w + SPACING; x += SPACING) {
+      for (let y = -SPACING / 2; y < h + SPACING; y += SPACING) {
+        points.push({ 
+          x, 
+          y, 
+          opacity: Math.random() * 0.5 + 0.5,
+          baseX: x,
+          baseY: y
+        });
+      }
+    }
+  }
+
+  function createBurst() {
+    const centerX = Math.random() * w;
+    const centerY = Math.random() * h;
+    const color = Math.random() > 0.5 ? 'red' : 'blue';
+    
+    const burst = {
+      centerX,
+      centerY,
+      color,
+      startTime: Date.now(),
+      dots: []
+    };
+
+    // Create burst dots in a spiral pattern
+    for (let i = 0; i < BURST_DOT_COUNT; i++) {
+      const angle = (i / BURST_DOT_COUNT) * Math.PI * 4; // 2 full spirals
+      const radius = 30 + (i * 8); // Expanding spiral
+      const dotX = centerX + Math.cos(angle) * radius;
+      const dotY = centerY + Math.sin(angle) * radius;
+      
+      // Find the closest regular dot to this position
+      let closestDot = null;
+      let minDistance = Infinity;
+      
+      for (const p of points) {
+        const distance = Math.sqrt((p.baseX - dotX) ** 2 + (p.baseY - dotY) ** 2);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestDot = p;
+        }
+      }
+      
+      if (closestDot) {
+        burst.dots.push({
+          dot: closestDot,
+          angle,
+          radius,
+          intensity: 1.0
+        });
+      }
+    }
+    
+    activeBursts.push(burst);
+  }
+
+  function updateBursts() {
+    const currentTime = Date.now();
+    
+    // Remove expired bursts
+    activeBursts = activeBursts.filter(burst => {
+      return (currentTime - burst.startTime) < BURST_DURATION;
+    });
+    
+    // Create new burst if enough time has passed
+    if (currentTime - lastBurstTime > BURST_INTERVAL) {
+      createBurst();
+      lastBurstTime = currentTime;
+    }
+  }
+
+  function getDotColor(p) {
+    const currentTime = Date.now();
+    
+    // Check if this dot is part of an active burst
+    for (const burst of activeBursts) {
+      for (const burstDot of burst.dots) {
+        if (burstDot.dot === p) {
+          const elapsed = currentTime - burst.startTime;
+          const progress = elapsed / BURST_DURATION;
+          
+          // Fade out over time
+          const intensity = Math.max(0, 1 - progress);
+          const pulse = Math.sin(progress * Math.PI * 4) * 0.3 + 0.7; // Pulsing effect
+          
+          if (burst.color === 'red') {
+            return `rgba(255, 100, 100, ${intensity * pulse})`;
+          } else {
+            return `rgba(100, 150, 255, ${intensity * pulse})`;
+          }
+        }
+      }
+    }
+    
+    // Default white/gray color
+    return null;
+  }
+
+  function initDots() {
+    const canvasElement = document.getElementById('dots-canvas');
+    if (!canvasElement) return;
+
+    canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    canvas.style.position = 'absolute';
+    canvas.style.top = '0';
+    canvas.style.left = '0';
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    canvas.style.pointerEvents = 'none';
+    
+    canvasElement.appendChild(canvas);
+    ctx = canvas.getContext('2d');
+    
+    addPoints();
+    animate();
+  }
+
+  function animate() {
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, w, h);
+    
+    const t = (frameCount / 80) * TIMESCALE;
+    
+    // Update burst system
+    updateBursts();
+
+    for (const p of points) {
+      const rad = getForceOnPoint(p.x, p.y, t);
+      const length = (noise(p.x / SCALE, p.y / SCALE, t * 2) + 0.5) * LENGTH;
+      const nx = p.x + Math.cos(rad) * length;
+      const ny = p.y + Math.sin(rad) * length;
+
+      // Create wave-like opacity based on position and time
+      const waveOpacity = (noise(p.x / 200, p.y / 200, t * 0.5) + 0.3) * 0.7;
+      const movementOpacity = Math.abs(Math.cos(rad)) * 0.3 + 0.2;
+      const baseOpacity = Math.max(waveOpacity, movementOpacity) * p.opacity * OPACITY;
+      
+      // Check for burst color
+      const burstColor = getDotColor(p);
+      
+      if (burstColor) {
+        ctx.fillStyle = burstColor;
+      } else {
+        ctx.fillStyle = `rgba(200, 200, 200, ${baseOpacity})`;
+      }
+      
+      ctx.beginPath();
+      ctx.arc(nx, ny, 1, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    frameCount++;
+    setTimeout(() => {
+      animationId = requestAnimationFrame(animate);
+    }, 1000 / TARGET_FRAMERATE);
+  }
+
+  function handleResize() {
+    w = window.innerWidth;
+    h = window.innerHeight;
+    if (canvas) {
+      canvas.width = w;
+      canvas.height = h;
+      addPoints();
+      // Clear active bursts on resize
+      activeBursts = [];
+    }
+  }
+
+  // Initialize when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDots);
+  } else {
+    initDots();
+  }
+  
+  window.addEventListener('resize', handleResize);
+
+  // Cleanup on page unload
+  window.addEventListener('beforeunload', () => {
+    window.removeEventListener('resize', handleResize);
+    if (animationId) {
+      cancelAnimationFrame(animationId);
+    }
+  });
+</script>
