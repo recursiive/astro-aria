@@ -6,5 +6,9 @@
 	{
 		"name": "~/Topics",
 		"url": "/topics"
+	},
+	{
+		"name": "~/Portfolio",
+		"url": "https://ryanhunt.dev"
 	}
 ]
