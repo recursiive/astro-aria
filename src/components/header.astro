@@ -7,7 +7,7 @@ import Logo from "../components/logo.astro";
 <div class="relative w-full h-20 opacity-0 pointer-events-none"></div>
 <header id="header" class="absolute top-0 z-50 w-full h-20 animate-float">
   <div
-    class="flex items-center justify-between h-full max-w-5xl pl-6 pr-4 mx-auto glass-strong liquid-glass select-none rounded-b-2xl border-0"
+    class="flex items-center justify-between h-full max-w-5xl pl-6 pr-4 mx-auto glass-strong liquid-glass select-none rounded-b-2xl border-0 overflow-visible"
   >
     <Logo />
     <div
@@ -49,24 +49,17 @@ import Logo from "../components/logo.astro";
           stroke="currentColor"><path d="M6 18L18 6M6 6l12 12"></path></svg
         >
       </div>
+      <!-- Desktop Menu -->
       <div
-        id="menu"
-        class="fixed top-[75px] left-0 w-full z-40 flex-col items-end justify-start hidden text-sm sm:top-0 sm:py-0 sm:pt-7 sm:pb-4 sm:mx-0 sm:left-0 sm:relative sm:flex-row sm:flex sm:text-base sm:h-auto sm:text-sm sm:w-auto sm:pr-0 sm:pt-0 ease-out duration-300"
+        id="desktopMenu"
+        class="hidden sm:flex sm:flex-row sm:text-base sm:h-auto sm:text-sm sm:w-auto sm:pr-0 sm:pt-0"
       >
-        <div
-          class="absolute inset-0 top-0 right-0 block w-full h-full px-3 sm:hidden"
-        >
-          <div
-            class="relative w-full h-full glass-card liquid-glass"
-          >
-          </div>
-        </div>
         {
           menus.map((menu) => {
             return (
               <a
                 href={menu.url}
-                class="relative flex items-center justify-center w-full px-3 py-2 font-medium tracking-wide text-center duration-200 ease-out sm:py-0 sm:mb-0 md:w-auto hover:text-white"
+                class="relative flex items-center justify-center px-3 py-0 font-medium tracking-wide text-center duration-200 ease-out hover:text-white"
               >
                 {menu.name}
               </a>
@@ -77,3 +70,24 @@ import Logo from "../components/logo.astro";
     </nav>
   </div>
 </header>
+
+<!-- Mobile Menu -->
+<div
+  id="menu"
+  class="fixed top-[75px] left-0 w-full z-40 flex-col items-end justify-start hidden text-sm ease-out duration-300"
+>
+  <div class="w-full px-4 py-6 glass-card liquid-glass rounded-b-2xl">
+    {
+      menus.map((menu) => {
+        return (
+          <a
+            href={menu.url}
+            class="relative flex items-center justify-center w-full px-3 py-3 font-medium tracking-wide text-center duration-200 ease-out hover:text-white border-b border-neutral-700 last:border-b-0"
+          >
+            {menu.name}
+          </a>
+        )
+      })
+    }
+  </div>
+</div>
