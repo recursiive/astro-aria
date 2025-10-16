@@ -1,38 +1,23 @@
 [
 	{
-		"name": "TempMail.Best",
-		"description": "Best Temporary Email.",
-		"image": "/assets/images/projects/tempmail.best.png",
-		"url": "https://tempmail.best"
+		"name": "D2C E-Commerece Platform",
+		"description": "E-commerce & secure admin CMS",
+		"image": "/assets/images/projects/crispydough.png",
+		"url": "https://thecrispydough.com",
+		"technologies": ["nextjs", "typescript", "sql"]
 	},
 	{
-		"name": "DNS.Surf",
-		"description": "Querying DNS Resolution Results in Different Regions Worldwide.",
-		"image": "/assets/images/projects/dns.surf.png",
-		"url": "https://dns.surf"
+		"name": "Stego Program",
+		"description": "Command-line steganography program to hide and extract arbitrary binary files within 8-bit grayscale BMP images by using a simple run-length encoding (RLE) scheme on each pixels LSB.",
+		"image": "/assets/images/projects/stego.png",
+		"url": "https://github.com/recursiive/steganography-project",
+		"technologies": ["python", "bash"]
 	},
 	{
-		"name": "HTML.ZONE",
-		"description": "Web Toolbox.",
-		"image": "/assets/images/projects/html.zone.png",
-		"url": "https://html.zone"
-	},
-	{
-		"name": "Sink",
-		"description": "A Simple / Speedy / Secure Link Shortener with Analytics.",
-		"image": "/assets/images/projects/sink.cool.png",
-		"url": "https://sink.cool"
-	},
-	{
-		"name": "BroadcastChannel",
-		"description": "Turn your Telegram Channel into a MicroBlog.",
-		"image": "/assets/images/projects/broadcast-channel.png",
-		"url": "https://github.com/ccbikai/BroadcastChannel"
-	},
-	{
-		"name": "L(O*62).ONG",
-		"description": "Make your URL looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooonger",
-		"image": "/assets/images/projects/long.png",
-		"url": "https://loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo.ong"
+		"name": "TracerFIRE Competition",
+		"description": "Placed 2nd out of 16 in the TracerFIRE cybersecurity competition hosted by Sandia National Laboratories, focused on digital forensics and incident response, utilizing tools such as Elastic, Velociraptor, Malcolm, Detect It Easy to uncover the story of a simulated company's live cyber attack.",
+		"image": "/assets/images/projects/tracerfire.jpg",
+		"url": "https://www.linkedin.com/posts/ryananthunt_this-weekend-i-competed-in-the-tracerfire-activity-7302135454970060800-mpQe?utm_source=share&utm_medium=member_desktop&rcm=ACoAAEapH0EBE3YP-Lwgk0Lr8Q4nvL9GIrNacac",
+		"technologies": ["elastic"]
 	}
 ]

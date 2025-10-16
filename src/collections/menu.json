@@ -1,14 +1,18 @@
 [
 	{
-		"name": "~/Posts",
+		"name": "~/Home",
 		"url": "/"
+	},
+	{
+		"name": "~/Blog",
+		"url": "/posts"
 	},
 	{
 		"name": "~/Topics",
 		"url": "/topics"
 	},
 	{
-		"name": "~/Portfolio",
-		"url": "https://ryanhunt.dev"
+		"name": "~/Projects",
+		"url": "/projects"
 	}
 ]

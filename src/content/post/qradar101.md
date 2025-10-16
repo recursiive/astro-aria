@@ -4,6 +4,7 @@ title: CyberDefenders QRadar 101
 description: A comprehensive writeup of the QRadar 101 challenge from CyberDefenders, covering SIEM fundamentals and log analysis techniques.
 dateFormatted: Oct 5, 2025
 topic: Threat Hunting
+technologies: ["cyberdefenders"]
 ---
 
 ![QRadar 101 Challenge](https://miro.medium.com/v2/resize:fit:322/format:webp/1*OGkjuHgXm9inBmtjczPOGA.png)

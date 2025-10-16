@@ -18,6 +18,25 @@ export async function getStaticPaths() {
 }
 
 const { topicName } = Astro.props;
+
+// Function to get the icon path for a technology
+function getTechIcon(tech: string): string {
+  const techIcons: Record<string, string> = {
+    'nextjs': '/assets/icons/technologies/nextjs.svg',
+    'typescript': '/assets/icons/technologies/typescript.svg',
+    'sql': '/assets/icons/technologies/sql.svg',
+    'python': '/assets/icons/technologies/python.svg',
+    'bash': '/assets/icons/technologies/bash.svg',
+    'elastic': '/assets/icons/technologies/elastic.svg',
+    'java': '/assets/icons/technologies/java.svg',
+    'javascript': '/assets/icons/technologies/javascript.svg',
+    'linux': '/assets/icons/technologies/linux.svg',
+    'hackthebox': '/assets/icons/technologies/hackthebox.svg',
+    'cyberdefenders': '/assets/icons/technologies/cyberdefenders.svg'
+  };
+  
+  return techIcons[tech.toLowerCase()] || '/assets/icons/technologies/default.svg';
+}
 const allPosts = await getCollection("post");
 
 function parseDate(dateStr) {
@@ -175,6 +194,18 @@ const topicInfo = topicData[topicName] || {
             <p class="text-sm text-neutral-600 dark:text-neutral-400">
               <span>{post.data.description}</span>
             </p>
+            {post.data.technologies && post.data.technologies.length > 0 && (
+              <div class="flex flex-wrap gap-2 mt-3">
+                {post.data.technologies.map((tech: string) => (
+                  <img 
+                    src={getTechIcon(tech)} 
+                    alt={tech}
+                    title={tech}
+                    class="w-5 h-5 opacity-70 hover:opacity-100 transition-opacity duration-200"
+                  />
+                ))}
+              </div>
+            )}
             <div class="mt-2.5 text-xs font-medium text-neutral-800 dark:text-neutral-300">
               Posted on {post.data.dateFormatted}
             </div>

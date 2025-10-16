@@ -7,6 +7,7 @@ const postCollection = defineCollection({
 		description: z.string(),
 		dateFormatted: z.string(),
 		topic: z.string(),
+		technologies: z.array(z.string()).optional(),
 	}),
 });
 
