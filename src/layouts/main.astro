@@ -2,7 +2,7 @@
 import Footer from "../components/footer.astro";
 import Header from "../components/header.astro";
 import Dots from "../components/dots.astro";
-const { title } = Astro.props;
+const { title, description = "A cybersecurity blog focused on threat hunting, threat intelligence, and security analysis." } = Astro.props;
 ---
 
 <!doctype html>
@@ -11,6 +11,27 @@ const { title } = Astro.props;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title}</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content={description} />
+    <meta name="keywords" content="cybersecurity, threat hunting, threat intelligence, SIEM, QRadar, security analysis, incident response" />
+    <meta name="author" content="Your Name" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content="/assets/images/cover.png" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:title" content={title} />
+    <meta property="twitter:description" content={description} />
+    <meta property="twitter:image" content="/assets/images/cover.png" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/favicon.png" />
 
     <!-- Force dark mode -->
     <script is:inline>
