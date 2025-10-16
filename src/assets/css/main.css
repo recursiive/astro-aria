@@ -266,3 +266,42 @@ html.dark {
     transform: translate3d(0, 10, 0)
   }
 }
+
+/* Typing animation */
+@keyframes typing {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes blink-caret {
+  from, to {
+    border-color: transparent;
+  }
+  50% {
+    border-color: rgba(255, 255, 255, 0.8);
+  }
+}
+
+.typing-animation {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  margin: 0 auto;
+  width: 0;
+  animation: 
+    typing 2.5s steps(11, end) 0.5s forwards;
+}
+
+.typing-animation::after {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 1em;
+  background-color: rgba(255, 255, 255, 0.8);
+  margin-left: 2px;
+  animation: blink-caret 0.75s step-end infinite 3s;
+}

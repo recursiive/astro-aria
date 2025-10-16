@@ -41,10 +41,14 @@ function getTopicSlug(topic) {
 <Layout title="Topics">
   <main class="min-h-screen flex flex-col">
     <section class="relative z-20 max-w-6xl mx-auto my-12 px-7 lg:px-0 flex-1">
-    <PageHeading
-      title="Topics"
-      description="Explore posts organized by topic. Click on any topic to see all related posts."
-    />
+      <div class="text-center mb-12">
+        <h1 class="text-4xl md:text-5xl font-bold text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.8)] dark:drop-shadow-[0_0_12px_rgba(255,255,255,0.8)] typing-animation">
+          Topics
+        </h1>
+        <p class="text-lg md:text-xl text-neutral-300 dark:text-neutral-400 mt-4 animate-fadeIn" style="animation-delay: 3s;">
+          explore posts organized by topic
+        </p>
+      </div>
 
     <div class="z-50 grid grid-cols-1 md:grid-cols-2 gap-6 my-8 animate-stagger">
       {topics.map((topic) => {

@@ -7,6 +7,14 @@ import Layout from "../layouts/main.astro";
 <Layout title="Posts">
   <main class="min-h-screen flex flex-col">
     <section class="relative z-20 max-w-6xl mx-auto my-12 px-7 lg:px-0 flex-1">
+      <div class="text-center mb-12">
+        <h1 class="text-4xl md:text-5xl font-bold text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.8)] dark:drop-shadow-[0_0_12px_rgba(255,255,255,0.8)] typing-animation">
+          Blog Posts
+        </h1>
+        <p class="text-lg md:text-xl text-neutral-300 dark:text-neutral-400 mt-4 animate-fadeIn" style="animation-delay: 3s;">
+          a deep dive into my learning journey
+        </p>
+      </div>
       <div class="z-50 grid grid-cols-1 md:grid-cols-2 gap-5 my-8 animate-stagger">
         <PostsLoop count="999999999" />
       </div>
