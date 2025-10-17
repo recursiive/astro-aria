@@ -33,7 +33,20 @@ const topicData = {
   },
   "Threat Intelligence": {
     image: "/assets/images/topics/threatintelligence.png"
-  }
+  },
+  "Security Engineering": {
+    image: "/assets/images/topics/securityengineering.png"
+  },
+  
+  "Incident Response": {
+    image: "/assets/images/topics/incidentresponse.png"
+  },
+  "Malware Analysis": {
+    image: "/assets/images/topics/malwareanalysis.png"
+  },
+  "Enumeration": {
+    image: "/assets/images/topics/networkenumeration.png"
+  },
 };
 
 function getTopicSlug(topic) {
@@ -57,7 +70,7 @@ function getTopicSlug(topic) {
       {topics.map((topic) => {
         const topicSlug = getTopicSlug(topic);
         const data = topicData[topic] || {
-          image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&h=300&fit=crop&crop=center"
+          image: "https://cdn.pixabay.com/photo/2020/02/15/16/50/security-4851428_1280.jpg"
         };
         
         return (
