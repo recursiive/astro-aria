@@ -3,7 +3,7 @@ layout: ../../layouts/post.astro
 title: Analysis of Solarwinds Breach, 2020
 description: A comprehensive analysis of the 2020 SolarWinds breach detailing APT29's supply chain compromise, attack phases, and response efforts through the lens of the MITRE ATT&CK framework.
 dateFormatted: Feb 4, 2025
-topic: Threat Intelligence
+topic: ["Threat Intelligence"]
 technologies: []
 ---
 

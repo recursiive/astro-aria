@@ -40,6 +40,7 @@ const postsLoop = sortedPosts.slice(0, count).map((post) => {
     ...(post.data || {}),
     link: `/post/${post.slug}`,
     technologies: post.data.technologies || [],
+    topics: post.data.topic || [],
   };
 });
 ---
@@ -101,13 +102,20 @@ const postsLoop = sortedPosts.slice(0, count).map((post) => {
                   </g>
                 </svg>
               </h2>
-              <a 
-                href={`/topics/${post.topic.toLowerCase().replace(/\s+/g, '').replace(/[&]/g, 'and')}`}
-                class="px-3 py-1.5 text-xs font-semibold text-blue-400 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-full shadow-sm hover:shadow-blue-200/50 dark:hover:shadow-blue-400/20 transition-all duration-300 hover:scale-110 hover:rotate-1 flex-shrink-0 animate-pulse-subtle drop-shadow-[0_0_6px_rgba(59,130,246,0.8)] dark:drop-shadow-[0_0_6px_rgba(59,130,246,0.8)] ring-1 ring-white/30 dark:ring-white/30"
-                onclick="event.stopPropagation()"
-              >
-                {post.topic}
-              </a>
+              <div class="flex items-center gap-1">
+                <a 
+                  href={`/topics/${post.topics[0].toLowerCase().replace(/\s+/g, '').replace(/[&]/g, 'and')}`}
+                  class="px-3 py-1.5 text-xs font-semibold text-blue-400 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-full shadow-sm hover:shadow-blue-200/50 dark:hover:shadow-blue-400/20 transition-all duration-300 hover:scale-110 hover:rotate-1 flex-shrink-0 animate-pulse-subtle drop-shadow-[0_0_6px_rgba(59,130,246,0.8)] dark:drop-shadow-[0_0_6px_rgba(59,130,246,0.8)] ring-1 ring-white/30 dark:ring-white/30"
+                  onclick="event.stopPropagation()"
+                >
+                  {post.topics[0]}
+                </a>
+                {post.topics.length > 1 && (
+                  <span class="px-2 py-1.5 text-xs font-semibold text-blue-300 bg-blue-100/20 dark:bg-blue-800/20 border border-blue-300/30 dark:border-blue-600/30 rounded-full shadow-sm flex-shrink-0">
+                    +{post.topics.length - 1}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           <p class="text-sm text-neutral-600 dark:text-neutral-400">

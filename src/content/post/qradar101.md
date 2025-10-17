@@ -3,7 +3,7 @@ layout: ../../layouts/post.astro
 title: CyberDefenders QRadar 101
 description: A comprehensive writeup of the QRadar 101 challenge from CyberDefenders, covering SIEM fundamentals and log analysis techniques.
 dateFormatted: Oct 5, 2025
-topic: Threat Hunting
+topic: ["Threat Hunting", "Threat Intelligence"]
 technologies: ["cyberdefenders"]
 ---
 
@@ -49,11 +49,11 @@ The query returned 1,531 results of successful logins all occurring on October 2
 
 ![Successful Logins Query Results](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*SrcQ9r8Idxv_-tE7-9bblQ.png)
 
-Analyzing the first present log, I was able to inspect the payload information, in which the account domain of “**HACKDEFEND.local**” was present.
+Analyzing the first present log, I was able to inspect the payload information, in which the account domain of "**HACKDEFEND.local**" was present.
 
 ![Domain Information in Log](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*Of_Twq2wOtbz6oiQpSOAjg.png)
 
-**Q4: Multiple IPs were communicating with the malicious server. One of them ends with “20”. Provide the full IP.**
+**Q4: Multiple IPs were communicating with the malicious server. One of them ends with "20". Provide the full IP.**
 
 Ironically, I noticed the first IP that was given in my successful logon query ended in .20, which solved my answer.
 
@@ -79,23 +79,23 @@ By reviewing the Offenses tab in Qradar, we can identify a specific offense rela
 
 To find the name of the project that the attacker was searching for, I tried filtering by the attackers IP address, but unfortunately did not find much besides connection records and NIDS alerts.
 
-I stopped filtering by the original attacker IP address of 192.20.80.25, and decided to filter on the payload. Using a specific payload contains regular expression filter on “project” .
+I stopped filtering by the original attacker IP address of 192.20.80.25, and decided to filter on the payload. Using a specific payload contains regular expression filter on "project" .
 
 ![Project Search Filter](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*zqy3EjFvht6SXMVv7D3oLw.png)
 
-By combing through the logs, we can identify a private IP address of 192.168.10.55, suggesting the attacker has compromised an internal host belonging to that 192.168.10.55 address and gained a foothold within the network. Additionally, by going through the 4 logs in which the payload contains “project”, the payload information tells us the targeted project (project48).
+By combing through the logs, we can identify a private IP address of 192.168.10.55, suggesting the attacker has compromised an internal host belonging to that 192.168.10.55 address and gained a foothold within the network. Additionally, by going through the 4 logs in which the payload contains "project", the payload information tells us the targeted project (project48).
 
 ![Project48 Payload Information](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*1WAfbI3hjbI-TOq4XylX4g.png)
 
 **Q9: What is the username of the infected employee using 192.168.10.15?**
 
-From the payload information and log information pertaining to the source IP, we identified the compromised host IP address of 192.168.10.15, filtering logs between May 1st, 2020, and December 30th, 2025, on the compromised host IP address and event ID 4624 for a successful logon. Through the logs, we are able to identify the compromised user “nour”.
+From the payload information and log information pertaining to the source IP, we identified the compromised host IP address of 192.168.10.15, filtering logs between May 1st, 2020, and December 30th, 2025, on the compromised host IP address and event ID 4624 for a successful logon. Through the logs, we are able to identify the compromised user "nour".
 
 ![Compromised User Nour](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*HLj5UsCfvivrcXgpiz_22A.png)
 
 **Q10:** **Hackers do not like logging, what logging was the attacker checking to see if enabled?**
 
-To try and find this information, I originally tried filtering on the username “nour” and event IDs 4719 and 1102. Unfortunately, this returned unsuccessful, so I tried a different approach of filtering on events of process creation (4688). This also was unsucessful. Instead, I focused on any logs related to the username “nour”. Looking at the first chronological logs related to nour, I found several logon/offs, and a powershell console started.
+To try and find this information, I originally tried filtering on the username "nour" and event IDs 4719 and 1102. Unfortunately, this returned unsuccessful, so I tried a different approach of filtering on events of process creation (4688). This also was unsucessful. Instead, I focused on any logs related to the username "nour". Looking at the first chronological logs related to nour, I found several logon/offs, and a powershell console started.
 
 ![PowerShell Console Activity](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*Dne3FSxQz3-LHgTZ7cYoIQ.png)
 
@@ -111,17 +111,17 @@ cmd.exe /Q /c del sami.xlsx 1> \\127.0.0.1\ADMIN$\__1604917981.0572538 2>&1
 
 ![Suspicious Command](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*o2PPGn2xvt7Kv3SiYQxg_Q.png)
 
-Examining the command that run, /Q turns on quiet mode, and /c is used to delete the file “sami.xlsx”, which could be deleting important files maybe related to project48 or possibly evidence of some sort. The output is then redirected to localhost/ADMIN$ which requires elevated permission to succesfully run, which indicates the attacker has gained elevated permissions.
+Examining the command that run, /Q turns on quiet mode, and /c is used to delete the file "sami.xlsx", which could be deleting important files maybe related to project48 or possibly evidence of some sort. The output is then redirected to localhost/ADMIN$ which requires elevated permission to succesfully run, which indicates the attacker has gained elevated permissions.
 
 **Q12: When was the first malicious connection to the domain controller (log start time — hh:mm:ss)?**
 
-Examining the first connections made to the DC we can filter on events of “Network Connection Detected”.
+Examining the first connections made to the DC we can filter on events of "Network Connection Detected".
 
 ![Network Connection to Domain Controller](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*BrudpPEQ8j15siGfH5RW1g.png)
 
 **Q13: What is the md5 hash of the malicious file?**
 
-By filtering on “hash”, we can find in the payload information ‘important_instructions.docx’ along with the MD5 hash.
+By filtering on "hash", we can find in the payload information 'important_instructions.docx' along with the MD5 hash.
 
 **Q14: What is the MITRE persistence technique ID used by the attacker?**
 
@@ -129,7 +129,7 @@ Considering attack techniques used by the attacker, we can look at different per
 
 **Q15: What protocol is used to perform host discovery?**
 
-Considering tools like nmap are commonly used for host discovery, in which nmap uses ICMP “pings” to identify is hosts are available.
+Considering tools like nmap are commonly used for host discovery, in which nmap uses ICMP "pings" to identify is hosts are available.
 
 **Q16: What is the email service used by the company?(one word)**
 
@@ -149,12 +149,12 @@ To find information on account creations, we can filter on Event ID 4720, which 
 
 **Q19: What is the PID of the process that performed injection?**
 
-By filtering on our infected host (192.168.10.15), and on Process Creation events, this returns 48 events. By going through the logs, we can see in the payload information the compromised user “nour” runs a suspicious file from the path “C:\Users\nour.HACKDEFEND\FSETPBEUsIek.exe” responsible for the injection. PID located in the payload information.
+By filtering on our infected host (192.168.10.15), and on Process Creation events, this returns 48 events. By going through the logs, we can see in the payload information the compromised user "nour" runs a suspicious file from the path "C:\Users\nour.HACKDEFEND\FSETPBEUsIek.exe" responsible for the injection. PID located in the payload information.
 
 **Q20: What is the name of the tool used for lateral movement?**
 
-I struggled with identifying the answer for this, but from what I’ve researched, the cmd process that was ran earlier that showed us the attacker had gained elevated permissions by writing to >ADMIN$, this is a common template used by wmiexec. According to Nischal Khadgi,
-“wmiexec allows a threat actor to execute commands on a remote system and/or establish a semi-interactive shell on a remote host. A detailed analysis along with the hunting guide is provided below”.
+I struggled with identifying the answer for this, but from what I've researched, the cmd process that was ran earlier that showed us the attacker had gained elevated permissions by writing to >ADMIN$, this is a common template used by wmiexec. According to Nischal Khadgi,
+"wmiexec allows a threat actor to execute commands on a remote system and/or establish a semi-interactive shell on a remote host. A detailed analysis along with the hunting guide is provided below".
 
 According to [Hunting for Impacket](https://riccardoancarani.github.io/2020-05-10-hunting-for-impacket/#wmiexecpy), wmiexec allows a threat actor to execute commands on a remote system and/or establish a semi-interactive shell on a remote host.
 
@@ -188,7 +188,7 @@ To find information on the network the threat actor scanned from the host IP 1 t
 
 **Q24: What is the name of the employee who hired the attacker?**
 
-Going back to the suspicious .xlsx file that was exfiltrated, although we do not know the contents, we do know the file name was “sami.xlsx”, which was uploaded through wmiexec.py. We can infer that sami is a name, and potentially the file came from an employee named sami, which was confirmed by the answer.
+Going back to the suspicious .xlsx file that was exfiltrated, although we do not know the contents, we do know the file name was "sami.xlsx", which was uploaded through wmiexec.py. We can infer that sami is a name, and potentially the file came from an employee named sami, which was confirmed by the answer.
 
 ## Overview
 

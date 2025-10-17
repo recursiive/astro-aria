@@ -18,12 +18,12 @@ const sortedPosts = allPosts
   .sort((a, b) => b.date.getTime() - a.date.getTime());
 
 // Get all unique topics
-const topics = [...new Set(sortedPosts.map(post => post.data.topic))].sort();
+const topics = [...new Set(sortedPosts.flatMap(post => post.data.topic))].sort();
 
 // Get posts for each topic
 const postsByTopic = {};
 topics.forEach(topic => {
-  postsByTopic[topic] = sortedPosts.filter(post => post.data.topic === topic);
+  postsByTopic[topic] = sortedPosts.filter(post => post.data.topic.includes(topic));
 });
 
 // Topic images
