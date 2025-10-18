@@ -56,7 +56,73 @@ const postsLoop = sortedPosts.slice(0, count).map((post) => {
       >
         <div class="relative z-30 duration-300 ease-out group-hover:-translate-y-1">
           <div class="mb-3">
-            <div class="flex items-start justify-between gap-3 mb-2">
+            {/* Mobile layout: title on top, topic tag below */}
+            <div class="block md:hidden mb-2">
+              <h2 class="flex items-center mb-2">
+                <a
+                  href={post.link}
+                  class="text-base font-bold leading-tight tracking-tight dark:text-neutral-100 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)] dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]"
+                >
+                  {post.title}
+                </a>
+                <svg
+                  class="group-hover:translate-x-0 flex-shrink-0 translate-y-0.5 -translate-x-1 w-2.5 h-2.5 text-neutral-600 dark:text-neutral-400 ml-1 transition-all ease-in-out duration-200 transform"
+                  viewBox="0 0 13 15"
+                  version="1.1"
+                  xmlns="http://www.w3.org/2000/svg"
+                  xmlns:xlink="http://www.w3.org/1999/xlink"
+                >
+                  <g
+                    stroke="none"
+                    stroke-width="1"
+                    fill="none"
+                    fill-rule="evenodd"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <g
+                      id="svg"
+                      transform="translate(0.666667, 2.333333)"
+                      stroke="currentColor"
+                      stroke-width="2.4"
+                    >
+                      <g>
+                        <>
+                          <polyline
+                            class="transition-all duration-200 ease-out opacity-0 delay-0 group-hover:opacity-100"
+                            points="5.33333333 0 10.8333333 5.5 5.33333333 11"
+                          />
+                          <line
+                            class="transition-all duration-200 ease-out transform -translate-x-1 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 group-hover:ml-0"
+                            x1="10.8333333"
+                            y1="5.5"
+                            x2="0.833333333"
+                            y2="5.16666667"
+                          />
+                        </>
+                      </g>
+                    </g>
+                  </g>
+                </svg>
+              </h2>
+              <div class="flex items-center gap-1">
+                <a 
+                  href={`/topics/${post.topics[0].toLowerCase().replace(/\s+/g, '').replace(/[&]/g, 'and')}`}
+                  class="px-3 py-1.5 text-xs font-semibold text-blue-400 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-full shadow-sm hover:shadow-blue-200/50 dark:hover:shadow-blue-400/20 transition-all duration-300 hover:scale-110 hover:rotate-1 flex-shrink-0 animate-pulse-subtle drop-shadow-[0_0_6px_rgba(59,130,246,0.8)] dark:drop-shadow-[0_0_6px_rgba(59,130,246,0.8)] ring-1 ring-white/30 dark:ring-white/30"
+                  onclick="event.stopPropagation()"
+                >
+                  {post.topics[0]}
+                </a>
+                {post.topics.length > 1 && (
+                  <span class="px-2 py-1.5 text-xs font-semibold text-blue-300 bg-blue-100/20 dark:bg-blue-800/20 border border-blue-300/30 dark:border-blue-600/30 rounded-full shadow-sm flex-shrink-0">
+                    +{post.topics.length - 1}
+                  </span>
+                )}
+              </div>
+            </div>
+            
+            {/* Desktop layout: title and topic tag side by side */}
+            <div class="hidden md:flex items-start justify-between gap-3 mb-2">
               <h2 class="flex items-center flex-1 min-w-0">
                 <a
                   href={post.link}
@@ -65,7 +131,7 @@ const postsLoop = sortedPosts.slice(0, count).map((post) => {
                   {post.title}
                 </a>
                 <svg
-                  class="group-hover:translate-x-0 flex-shrink-0 translate-y-0.5 -translate-x-1 w-2.5 h-2.5 text-neutral-600 dark:text-neutral-400 ml-1 transition-all ease-in-out duration-200  transform"
+                  class="group-hover:translate-x-0 flex-shrink-0 translate-y-0.5 -translate-x-1 w-2.5 h-2.5 text-neutral-600 dark:text-neutral-400 ml-1 transition-all ease-in-out duration-200 transform"
                   viewBox="0 0 13 15"
                   version="1.1"
                   xmlns="http://www.w3.org/2000/svg"
