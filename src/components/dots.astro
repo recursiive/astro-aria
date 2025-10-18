@@ -19,7 +19,7 @@
   const TARGET_FRAMERATE = 5;
   const TIMESCALE = 2;
   const OPACITY = 0.7;
-  const BURST_INTERVAL = 5000; // 5 seconds in milliseconds
+  const BURST_INTERVAL = 2500; // 2.5 seconds in milliseconds
   const BURST_DURATION = 3000; // 3 seconds burst duration
   const BURST_DOT_COUNT = 12; // Number of colored dots in each burst
 
@@ -58,7 +58,10 @@
   function createBurst() {
     const centerX = Math.random() * w;
     const centerY = Math.random() * h;
-    const color = Math.random() > 0.5 ? 'red' : 'blue';
+    
+    // Array of available colors
+    const colors = ['red', 'blue', 'purple', 'green', 'orange', 'yellow', 'cyan'];
+    const color = colors[Math.floor(Math.random() * colors.length)];
     
     const burst = {
       centerX,
@@ -129,11 +132,18 @@
           const intensity = Math.max(0, 1 - progress);
           const pulse = Math.sin(progress * Math.PI * 4) * 0.3 + 0.7; // Pulsing effect
           
-          if (burst.color === 'red') {
-            return `rgba(255, 100, 100, ${intensity * pulse})`;
-          } else {
-            return `rgba(100, 150, 255, ${intensity * pulse})`;
-          }
+          // Color mapping for different burst colors
+          const colorMap = {
+            'red': `rgba(255, 100, 100, ${intensity * pulse})`,
+            'blue': `rgba(100, 150, 255, ${intensity * pulse})`,
+            'purple': `rgba(180, 100, 255, ${intensity * pulse})`,
+            'green': `rgba(100, 255, 150, ${intensity * pulse})`,
+            'orange': `rgba(255, 180, 100, ${intensity * pulse})`,
+            'yellow': `rgba(255, 255, 100, ${intensity * pulse})`,
+            'cyan': `rgba(100, 255, 255, ${intensity * pulse})`
+          };
+          
+          return colorMap[burst.color] || `rgba(200, 200, 200, ${intensity * pulse})`;
         }
       }
     }
