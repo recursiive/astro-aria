@@ -96,3 +96,28 @@ I did some research into creating an attack map in Azure, and was able to get th
 ![ATTACKMAP1](https://i.imgur.com/xZCZO6c.png)
 
 Since the lab environment has only been deployed for ~2 hours, and malicious activity is currently only coming from a single location, I will leave the virtual machine up for an additional 24 hours and observe attacker behaviours and further validate analytic rules and visualizations.
+
+![UPDATE](https://i.imgur.com/wVODBTz.png)
+
+Within approximately 12 hours, the virtual machine has recorded over 90,000 failed authentication attempts, indicating a large scale brute force or credential stuffing attack targeting the system. 
+
+1/3 of the traffic coming from Maam, Netherlands.
+
+## Learning Points
+
+This lab provided valuable insight into real world attack logs, SIEM configuration, and threat-hunting methodologies within a controller Azure environment. Some key takeaways: 
+
+1. Exposure driving visibility
+- By intentionally exposing a poorly secured VM to the public internet with nearly no defenses other than a username and password, it became very clear very quickly how quickly automated scanners and brute forcers identify and target open systems. The speed and scale of the activity was very shocking with over 90,000 failed logon attempts in under 12 hours, 1,000 in the first hour. 
+2. The importance of context
+- Integrating external IP watchlists and geolocation data took these raw logs into key intelligence mapping attacker IPs to physical regions across the world really helped visualize the global distribution of attacks.
+3. Log Centralization
+- It was very nice having one centralized SIEM across the board, having all my logs flow into Microsoft Sentinel shows the importance of SIEMs and log centralization instead of combing across different tools to obtain key information.
+4. KQL
+- Using Kusto Query Language (KQL), allowed me to query important information, quickly. Using specific queries targeting specific event IDs, and user accounts, alongside IP geolocation data streamlined the process of identifying these brute force attacks.
+
+## Next Steps
+
+1. Deploy additional virtual machines under a domain to simulate a small enterprise network and expand log sources to include a variety of systems including Linux systems, database systems, and Azure activity logs. 
+2. Integrating threat intelligence feeds into Microsoft Sentinel to gain a deeper understanding of detections.
+3. Start writing custom detection rules and playbooks for automated response.
