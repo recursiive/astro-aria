@@ -3,24 +3,17 @@ import type { APIRoute } from 'astro';
 // This API route should not be prerendered
 export const prerender = false;
 
-// Simple in-memory store for view counts
-// In production, you'd use a proper database
-let viewCounts: Record<string, number> = {};
-
-// Load initial data (in production, load from database)
-const loadInitialCounts = () => {
-  // Initialize with some realistic counts for demo
-  if (Object.keys(viewCounts).length === 0) {
-    viewCounts = {
-      'qradar101': 142,
-      'soclab': 89,
-      'solarwinds': 203,
-      'soulmate': 67,
-    };
-  }
+// Initial view counts (in production, this would come from a database)
+const getInitialCounts = (): Record<string, number> => {
+  return {
+    'qradar101': 142,
+    'soclab': 89,
+    'solarwinds': 203,
+    'soulmate': 67,
+  };
 };
 
-export const GET: APIRoute = async ({ params, url }) => {
+export const GET: APIRoute = async ({ params }) => {
   const slug = params.slug;
   if (!slug) {
     return new Response(JSON.stringify({ error: 'Slug is required' }), {
@@ -34,9 +27,8 @@ export const GET: APIRoute = async ({ params, url }) => {
     });
   }
 
-  loadInitialCounts();
-  
-  const count = viewCounts[slug] || 0;
+  const initialCounts = getInitialCounts();
+  const count = initialCounts[slug] || 0;
   
   return new Response(JSON.stringify({ slug, views: count }), {
     status: 200,
@@ -49,7 +41,7 @@ export const GET: APIRoute = async ({ params, url }) => {
   });
 };
 
-export const POST: APIRoute = async ({ params, request, url }) => {
+export const POST: APIRoute = async ({ params, request }) => {
   const slug = params.slug;
   if (!slug) {
     return new Response(JSON.stringify({ error: 'Slug is required' }), {
@@ -64,22 +56,20 @@ export const POST: APIRoute = async ({ params, request, url }) => {
   }
 
   try {
-    loadInitialCounts();
-    
-    // Get the current count
-    const currentCount = viewCounts[slug] || 0;
+    const initialCounts = getInitialCounts();
+    const currentCount = initialCounts[slug] || 0;
     
     // Check if this is an increment request
     const body = await request.json().catch(() => ({}));
     const shouldIncrement = body.increment === true;
     
-    if (shouldIncrement) {
-      viewCounts[slug] = currentCount + 1;
-    }
+    // For now, we'll simulate incrementing but not persist it
+    // In production, this would save to a database
+    const newCount = shouldIncrement ? currentCount + 1 : currentCount;
     
     return new Response(JSON.stringify({ 
       slug, 
-      views: viewCounts[slug],
+      views: newCount,
       incremented: shouldIncrement 
     }), {
       status: 200,

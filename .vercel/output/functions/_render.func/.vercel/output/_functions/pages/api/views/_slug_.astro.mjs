@@ -1,18 +1,15 @@
 export { renderers } from '../../../renderers.mjs';
 
 const prerender = false;
-let viewCounts = {};
-const loadInitialCounts = () => {
-  if (Object.keys(viewCounts).length === 0) {
-    viewCounts = {
-      "qradar101": 142,
-      "soclab": 89,
-      "solarwinds": 203,
-      "soulmate": 67
-    };
-  }
+const getInitialCounts = () => {
+  return {
+    "qradar101": 142,
+    "soclab": 89,
+    "solarwinds": 203,
+    "soulmate": 67
+  };
 };
-const GET = async ({ params, url }) => {
+const GET = async ({ params }) => {
   const slug = params.slug;
   if (!slug) {
     return new Response(JSON.stringify({ error: "Slug is required" }), {
@@ -25,8 +22,8 @@ const GET = async ({ params, url }) => {
       }
     });
   }
-  loadInitialCounts();
-  const count = viewCounts[slug] || 0;
+  const initialCounts = getInitialCounts();
+  const count = initialCounts[slug] || 0;
   return new Response(JSON.stringify({ slug, views: count }), {
     status: 200,
     headers: {
@@ -37,7 +34,7 @@ const GET = async ({ params, url }) => {
     }
   });
 };
-const POST = async ({ params, request, url }) => {
+const POST = async ({ params, request }) => {
   const slug = params.slug;
   if (!slug) {
     return new Response(JSON.stringify({ error: "Slug is required" }), {
@@ -51,16 +48,14 @@ const POST = async ({ params, request, url }) => {
     });
   }
   try {
-    loadInitialCounts();
-    const currentCount = viewCounts[slug] || 0;
+    const initialCounts = getInitialCounts();
+    const currentCount = initialCounts[slug] || 0;
     const body = await request.json().catch(() => ({}));
     const shouldIncrement = body.increment === true;
-    if (shouldIncrement) {
-      viewCounts[slug] = currentCount + 1;
-    }
+    const newCount = shouldIncrement ? currentCount + 1 : currentCount;
     return new Response(JSON.stringify({
       slug,
-      views: viewCounts[slug],
+      views: newCount,
       incremented: shouldIncrement
     }), {
       status: 200,
