@@ -221,45 +221,37 @@ const postsLoop = sortedPosts.slice(0, count).map((post) => {
 }
 
 <script>
-  // Update view counts for all posts on the page using localStorage
-  document.addEventListener('DOMContentLoaded', function() {
+  // Load real view counts from API for all posts on the page
+  document.addEventListener('DOMContentLoaded', async function() {
     const viewCountElements = document.querySelectorAll('.view-count[data-slug]');
     
-    try {
-      // Get view counts from localStorage
-      const viewCounts = JSON.parse(localStorage.getItem('blog_view_counts') || '{}');
+    // Load counts for each post from the API
+    for (const element of viewCountElements) {
+      const slug = element.getAttribute('data-slug');
+      const span = element.querySelector('span');
       
-      // Load counts for each post
-      viewCountElements.forEach((element) => {
-        const slug = element.getAttribute('data-slug');
-        const span = element.querySelector('span');
+      if (!slug || !span) continue;
+      
+      try {
+        const response = await fetch(`/api/views/${slug}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
         
-        if (!slug || !span) return;
-        
-        let count = viewCounts[slug] || 0;
-        
-        // If no count exists, generate a deterministic seed
-        if (count === 0) {
-          let hash = 0;
-          for (let i = 0; i < slug.length; i++) {
-            const char = slug.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash = hash & hash;
-          }
-          count = Math.abs(hash) % 50 + 20; // 20-69 views
-          viewCounts[slug] = count;
-          localStorage.setItem('blog_view_counts', JSON.stringify(viewCounts));
+        if (response.ok) {
+          const data = await response.json();
+          const count = data.views || 0;
+          span.textContent = `${count} views`;
+        } else {
+          throw new Error('Failed to fetch view count');
         }
-        
-        span.textContent = `${count} views`;
-      });
-    } catch (error) {
-      console.log('Error loading view counts:', error);
-      // Fallback: set all to reasonable defaults
-      viewCountElements.forEach((element) => {
-        const span = element.querySelector('span');
-        if (span) span.textContent = '25 views';
-      });
+      } catch (error) {
+        console.log(`Error loading view count for ${slug}:`, error);
+        // Fallback: set to reasonable default
+        span.textContent = '25 views';
+      }
     }
   });
 </script>

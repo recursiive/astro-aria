@@ -47,8 +47,8 @@ const { frontmatter } = Astro.props;
 </Layout>
 
 <script>
-  // Track view using localStorage with a better global simulation
-  function trackView() {
+  // Real global view tracking using API
+  async function trackView() {
     const slug = window.location.pathname.split('/').pop();
     if (!slug) return;
     
@@ -56,53 +56,57 @@ const { frontmatter } = Astro.props;
     if (!viewNumber) return;
     
     try {
-      // Get current count from localStorage
-      const localCounts = JSON.parse(localStorage.getItem('blog_view_counts') || '{}');
-      let currentViews = localCounts[slug] || 0;
-      
-      // If this is the first time, seed with a reasonable initial value
-      if (currentViews === 0) {
-        // Create a deterministic seed based on the slug hash
-        let hash = 0;
-        for (let i = 0; i < slug.length; i++) {
-          const char = slug.charCodeAt(i);
-          hash = ((hash << 5) - hash) + char;
-          hash = hash & hash; // Convert to 32-bit integer
-        }
-        // Use absolute value and modulo to get a reasonable starting number
-        currentViews = Math.abs(hash) % 50 + 20; // 20-69 views
-        localCounts[slug] = currentViews;
-        localStorage.setItem('blog_view_counts', JSON.stringify(localCounts));
-      }
-      
-      // Display current count
-      viewNumber.textContent = currentViews;
-      
-      // Check if user has already viewed this post in this session (to prevent spam)
+      // Check if user has already viewed this post in this session
       const sessionKey = `viewed-${slug}-session`;
-      if (!sessionStorage.getItem(sessionKey)) {
-        // Increment the count immediately
-        currentViews += 1;
-        localCounts[slug] = currentViews;
-        localStorage.setItem('blog_view_counts', JSON.stringify(localCounts));
+      const hasViewed = sessionStorage.getItem(sessionKey);
+      
+      // First, get current count from API
+      const response = await fetch(`/api/views/${slug}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const currentViews = data.views || 0;
         
-        // Update display immediately
+        // Display current count
         viewNumber.textContent = currentViews;
         
-        // Mark as viewed this session to prevent multiple increments from same user
-        sessionStorage.setItem(sessionKey, 'true');
-        
-        console.log(`View tracked for "${slug}": ${currentViews} total views`);
+        // If user hasn't viewed this post in this session, increment the count
+        if (!hasViewed) {
+          try {
+            const incrementResponse = await fetch(`/api/views/${slug}`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ increment: true }),
+            });
+            
+            if (incrementResponse.ok) {
+              const incrementData = await incrementResponse.json();
+              // Update display with new count
+              viewNumber.textContent = incrementData.views;
+              
+              // Mark as viewed this session to prevent spam
+              sessionStorage.setItem(sessionKey, 'true');
+              
+              console.log(`View tracked for "${slug}": ${incrementData.views} total views`);
+            }
+          } catch (incrementError) {
+            console.log('Failed to increment view count:', incrementError);
+          }
+        }
+      } else {
+        throw new Error('Failed to fetch view count');
       }
     } catch (error) {
       console.log('View tracking error:', error);
-      // Fallback
+      // Fallback to a reasonable number
       viewNumber.textContent = '1';
-      
-      const viewedKey = `viewed-${slug}`;
-      if (!sessionStorage.getItem(viewedKey)) {
-        sessionStorage.setItem(viewedKey, 'true');
-      }
     }
   }
   
