@@ -1,6 +1,9 @@
 ---
 import { getCollection } from "astro:content";
 
+// Ensure this page is prerendered as static
+export const prerender = true;
+
 export async function getStaticPaths() {
 	const postEntries = await getCollection("post");
 	return postEntries.map((entry) => ({
@@ -9,9 +12,8 @@ export async function getStaticPaths() {
 	}));
 }
 
-const { entry } = Astro.props;
+const { entry } = Astro.props as { entry: any };
 const { Content } = await entry.render();
-const { slug } = Astro.params;
 ---
 
-<Content layout="../layouts/post.astro" slug={slug} />
+<Content layout="../layouts/post.astro" />

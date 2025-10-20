@@ -10,6 +10,9 @@
 		"astro": "astro",
 		"check": "biome check --apply-unsafe ."
 	},
+	"dependencies": {
+		"@upstash/redis": "^1.35.6"
+	},
 	"devDependencies": {
 		"@astrojs/check": "^0.6.0",
 		"@astrojs/tailwind": "^5.1.0",
