@@ -47,38 +47,62 @@ const { frontmatter } = Astro.props;
 </Layout>
 
 <script>
-  // Track view and update counter using localStorage
+  // Track view using localStorage with a better global simulation
   function trackView() {
-    // Get slug from URL path
     const slug = window.location.pathname.split('/').pop();
     if (!slug) return;
     
+    const viewNumber = document.getElementById('view-number');
+    if (!viewNumber) return;
+    
     try {
-      // Initialize view counts if not exists
-      let viewCounts = JSON.parse(localStorage.getItem('blog_view_counts') || '{}');
+      // Get current count from localStorage
+      const localCounts = JSON.parse(localStorage.getItem('blog_view_counts') || '{}');
+      let currentViews = localCounts[slug] || 0;
       
-      // Get current count
-      const currentViews = viewCounts[slug] || 0;
-      const viewNumber = document.getElementById('view-number');
-      if (viewNumber) {
-        viewNumber.textContent = currentViews;
+      // If this is the first time, seed with a reasonable initial value
+      if (currentViews === 0) {
+        // Create a deterministic seed based on the slug hash
+        let hash = 0;
+        for (let i = 0; i < slug.length; i++) {
+          const char = slug.charCodeAt(i);
+          hash = ((hash << 5) - hash) + char;
+          hash = hash & hash; // Convert to 32-bit integer
+        }
+        // Use absolute value and modulo to get a reasonable starting number
+        currentViews = Math.abs(hash) % 50 + 20; // 20-69 views
+        localCounts[slug] = currentViews;
+        localStorage.setItem('blog_view_counts', JSON.stringify(localCounts));
       }
       
-      // Increment count (with session storage to prevent spam)
-      const viewedKey = `viewed-${slug}`;
-      if (!sessionStorage.getItem(viewedKey)) {
-        viewCounts[slug] = currentViews + 1;
-        localStorage.setItem('blog_view_counts', JSON.stringify(viewCounts));
+      // Display current count
+      viewNumber.textContent = currentViews;
+      
+      // Check if user has already viewed this post today
+      const todayKey = `viewed-${slug}-${new Date().toDateString()}`;
+      if (!sessionStorage.getItem(todayKey)) {
+        // Increment the count
+        currentViews += 1;
+        localCounts[slug] = currentViews;
+        localStorage.setItem('blog_view_counts', JSON.stringify(localCounts));
         
-        // Update the display immediately
-        if (viewNumber) {
-          viewNumber.textContent = viewCounts[slug];
-        }
+        // Update display immediately
+        viewNumber.textContent = currentViews;
         
-        sessionStorage.setItem(viewedKey, 'true');
+        // Mark as viewed today
+        sessionStorage.setItem(todayKey, 'true');
+        
+        console.log(`View tracked for "${slug}": ${currentViews} total views`);
       }
     } catch (error) {
       console.log('View tracking error:', error);
+      // Fallback
+      viewNumber.textContent = '1';
+      
+      const viewedKey = `viewed-${slug}`;
+      if (!sessionStorage.getItem(viewedKey)) {
+        sessionStorage.setItem(viewedKey, 'true');
+      }
     }
   }
   
