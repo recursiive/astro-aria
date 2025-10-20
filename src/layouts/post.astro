@@ -25,15 +25,6 @@ const { frontmatter } = Astro.props;
           >
             {frontmatter.title}
           </h1>
-          <div class="flex items-center gap-4 ml-4">
-            <div id="view-count" class="text-sm text-neutral-600 dark:text-neutral-400 flex items-center gap-1">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-              </svg>
-              <span id="view-number">-</span> views
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -46,72 +37,3 @@ const { frontmatter } = Astro.props;
   </main>
 </Layout>
 
-<script>
-  // Real global view tracking using API
-  async function trackView() {
-    const slug = window.location.pathname.split('/').pop();
-    if (!slug) return;
-    
-    const viewNumber = document.getElementById('view-number');
-    if (!viewNumber) return;
-    
-    try {
-      // Check if user has already viewed this post in this session
-      const sessionKey = `viewed-${slug}-session`;
-      const hasViewed = sessionStorage.getItem(sessionKey);
-      
-      // First, get current count from API
-      const response = await fetch(`/api/views/${slug}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        const currentViews = data.views || 0;
-        
-        // Display current count
-        viewNumber.textContent = currentViews;
-        
-        // If user hasn't viewed this post in this session, increment the count
-        if (!hasViewed) {
-          try {
-            const incrementResponse = await fetch(`/api/views/${slug}`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ increment: true }),
-            });
-            
-            if (incrementResponse.ok) {
-              const incrementData = await incrementResponse.json();
-              // Update display with new count
-              viewNumber.textContent = incrementData.views;
-              
-              // Mark as viewed this session to prevent spam
-              sessionStorage.setItem(sessionKey, 'true');
-              
-              console.log(`View tracked for "${slug}": ${incrementData.views} total views`);
-            }
-          } catch (incrementError) {
-            console.log('Failed to increment view count:', incrementError);
-          }
-        }
-      } else {
-        throw new Error('Failed to fetch view count');
-      }
-    } catch (error) {
-      console.log('View tracking error:', error);
-      // Fallback to a reasonable number
-      viewNumber.textContent = '1';
-    }
-  }
-  
-  // Track view on page load
-  if (typeof window !== 'undefined') {
-    document.addEventListener('DOMContentLoaded', trackView);
-  }
-</script>
