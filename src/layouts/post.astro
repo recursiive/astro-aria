@@ -78,10 +78,10 @@ const { frontmatter } = Astro.props;
       // Display current count
       viewNumber.textContent = currentViews;
       
-      // Check if user has already viewed this post today
-      const todayKey = `viewed-${slug}-${new Date().toDateString()}`;
-      if (!sessionStorage.getItem(todayKey)) {
-        // Increment the count
+      // Check if user has already viewed this post in this session (to prevent spam)
+      const sessionKey = `viewed-${slug}-session`;
+      if (!sessionStorage.getItem(sessionKey)) {
+        // Increment the count immediately
         currentViews += 1;
         localCounts[slug] = currentViews;
         localStorage.setItem('blog_view_counts', JSON.stringify(localCounts));
@@ -89,8 +89,8 @@ const { frontmatter } = Astro.props;
         // Update display immediately
         viewNumber.textContent = currentViews;
         
-        // Mark as viewed today
-        sessionStorage.setItem(todayKey, 'true');
+        // Mark as viewed this session to prevent multiple increments from same user
+        sessionStorage.setItem(sessionKey, 'true');
         
         console.log(`View tracked for "${slug}": ${currentViews} total views`);
       }
