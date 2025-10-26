@@ -11,10 +11,10 @@ technologies: ["Linux", "HackTheBox"]
 
 ## Overview
 
-In HackTheBox's Soulmate machine, 
+In HackTheBox's Soulmate machine, I exploited an unpatched CrushFTP instance on HackTheBox Soulmate machine to gain an initial foothold on the FTP web server. Followed by a PHP webshell for post-exploitation. Through the use of linPEAS, I ran automated enumeration to gain information on the user which revealed cleartext credentials to gain user access. Upon gaining access, I discovered a misconfigured Erlang service which reused those credentials and abused the erlang console by root command execution.
 
 
-## Conducting initial recon through nmap to discover any open ports:
+### Conducting initial recon through nmap to discover any open ports:
 
 To confirm my VPN is connected correctly, and confirm the machine is reachable, I pinged the target machine IP address.
 
@@ -173,3 +173,9 @@ Eshell V15.2.5 (press Ctrl+G to abort, type help(). for help)
 ```
 ### Ending Thoughts
 
+As this was my first red team box, Soulmate was a great exercise for me to chain together small investigate hints to a full compromise of the system.
+A couple technical takeaways for this machine:
+
+- __Host and vhost discovery:__ The initial 'did not follow redirect' was a small clue that paid off huge once `soulmate.htb` was added to `/etc/hosts`. 
+- __Patch Management:__ Discovering multiple vulnerabilities through CrushFTP, and Erlang through public PoC's was the pivot point that led from initial recon to full admin access. Patch Management is so important for organizations to address, this whole attack could have been prevented through the patching of CrushFTP. 
+- __Enumeration:__ Using linPEAS for this machine worked out very well for automated enumeration, which gave me insight into what to dig into.
