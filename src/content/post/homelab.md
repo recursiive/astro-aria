@@ -10,8 +10,8 @@ technologies: ["Proxmox", "Linux", "Windows"]
 Super stoked to finally get my hands on some hardware to get my homelab up and running.
 
 ### Current Plans
-- [x] Set up Proxmox on main server `huntproxprd1`
-- [x] Set up Docker instance running Debian 13 for Teslamate Web Server
+- [x] Set up Proxmox hypervisor
+- [x] Set up Docker instance running Debian 13 for Teslamate Web Server using Proxmox hypervisor
 - [ ] Setup `hunt.local` domain through Windows Server 2022
 - [ ] Setup domain joined deprecated Windows 10 vulnerable machine to be attackable
 
@@ -24,7 +24,29 @@ Super stoked to finally get my hands on some hardware to get my homelab up and r
 
 ### Proxmox VE Install
 
-Through Rufus, I flashed [Proxmox VE](https://www.proxmox.com/en/products/proxmox-virtual-environment/overview) onto a USB and installed it on the Optiplex 3050, and installed docker on the machine. 
+Through Rufus, I flashed [Proxmox VE](https://www.proxmox.com/en/products/proxmox-virtual-environment/overview) onto a USB and installed it on the Optiplex 3050, and installed docker on the machine.
+
+### Setting up Windows Server 2022 as my Domain Controller
+
+After downloading the Windows Server 2022 .iso file from Microsoft, I uploaded it to my main node in Proxmox and then created a new VM with the following configurations:
+
+![DC-config](https://i.imgur.com/R1NgOOo.png)
+
+Through the Control Panel and IPv4 network properties, I configured a static IP for my domain controller.
+
+![static](https://i.imgur.com/huVHzvG.png)
+
+I also renamed the computer to the common Domain Controller naming convention (XXXX-SAN-DC01).
+
+### Promoting to Domain Controller
+
+Promoting to Domain Controller ran me through me through the configuration of AD, allowing me to install additional features such as DHCP, DNS Servers, and set up my domain name.
+
+### Installing Domain-Joined Windows 10 VM
+
+Installing the Windows 10 VM in Proxmox under my main node was pretty straightforward, loading the Windows10.iso into storage and adding an additional CD/DVD drive for VirtIO drivers.
+
+![win10](https://i.imgur.com/Qqm4Psa.png)
 
 ### Deploying a Debian Instance for Teslamate
 
@@ -98,30 +120,5 @@ To configure the .yml, I set up a secure encryption key, as well as a secure dat
 Heres a nice overview of Grafana logging the data for my Tesla.
 
 ![grafana](https://i.imgur.com/YWAinJV.png)
-
-### Setting up Windows Server 2022 as my Domain Controller
-
-After downloading the Windows Server 2022 .iso file from Microsoft, I uploaded it to my main node in Proxmox and then created a new VM with the following configurations:
-
-![DC-config](https://i.imgur.com/R1NgOOo.png)
-
-Through the Control Panel and IPv4 network properties, I configured a static IP for my domain controller.
-
-![static](https://i.imgur.com/huVHzvG.png)
-
-I also renamed the computer to the common Domain Controller naming convention (XXXX-SAN-DC01).
-
-### Promoting to Domain Controller
-
-Promoting to Domain Controller ran me through me through the configuration of AD, allowing me to install additional features such as DHCP, DNS Servers, and set up my domain name.
-
-
-
-
-### Installing Domain-Joined Windows 10 VM
-
-Installing the Windows 10 VM in Proxmox under my main node was pretty straightforward, loading the Windows10.iso into storage and adding an additional CD/DVD drive for VirtIO drivers.
-
-![win10](https://i.imgur.com/Qqm4Psa.png)
 
 
