@@ -16,15 +16,17 @@ import { siteConfig } from "../../config";
     </div>
 
     <div class="lg:col-span-8 lg:pr-8 space-y-8">
-      <p class="text-lg sm:text-xl md:text-2xl leading-relaxed text-gray-300">
-        {siteConfig.aboutMe}
-      </p>
+      <div class="glass-card liquid-glass rounded-xl p-6 sm:p-8 backdrop-blur-md border border-gray-700/50">
+        <p class="text-lg sm:text-xl md:text-2xl leading-relaxed text-gray-300">
+          {siteConfig.aboutMe}
+        </p>
+      </div>
 
-      <div class="pt-4">
+      <div class="glass-card liquid-glass rounded-xl p-6 backdrop-blur-md border border-gray-700/50">
         <div class="flex flex-wrap gap-3">
           {
             siteConfig.skills.map((skill) => (
-              <span class="px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-800 border border-gray-700 text-gray-300 rounded-full text-sm sm:text-base md:text-lg font-medium hover:bg-gray-700 transition-colors duration-200">
+              <span class="px-3 sm:px-4 py-1.5 sm:py-2 glass-card liquid-glass border border-gray-700/50 text-gray-300 rounded-full text-sm sm:text-base md:text-lg font-medium hover:border-gray-600/70 transition-all duration-200 hover:scale-105">
                 {skill}
               </span>
             ))

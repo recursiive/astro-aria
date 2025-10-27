@@ -83,53 +83,173 @@ function getTopicSlug(topic) {
         </p>
       </div>
 
-    <div class="z-50 grid grid-cols-1 md:grid-cols-2 gap-6 my-8 animate-stagger">
-      {topics.map((topic) => {
-        const topicSlug = getTopicSlug(topic);
-        const data = topicData[topic] || {
-          image: "https://cdn.pixabay.com/photo/2020/02/15/16/50/security-4851428_1280.jpg"
-        };
-        
-        return (
-          <a 
-            href={`/topics/${topicSlug}`}
-            class="group relative overflow-hidden glass-card liquid-glass rounded-2xl transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20 hover:rotate-1"
-          >
-            <div class="aspect-[4/3] overflow-hidden">
-              <img 
-                src={data.image} 
-                alt={topic}
-                class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 group-hover:brightness-110"
-                loading="lazy"
-              />
-              <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-            </div>
-            
-            <div class="absolute bottom-0 left-0 right-0 p-6 text-white">
-              <div class="flex items-center justify-between mb-2">
-                <h3 class="text-xl font-bold group-hover:text-blue-300 transition-colors">
-                  {topic}
-                </h3>
-                <span class="px-2 py-1 text-xs font-semibold bg-blue-500/20 backdrop-blur-sm border border-blue-400/30 rounded-full text-blue-100">
-                  {postsByTopic[topic].length} {postsByTopic[topic].length === 1 ? 'post' : 'posts'}
-                </span>
+      <!-- Search and Sort Controls -->
+      <div class="mb-8 flex flex-col sm:flex-row gap-4 items-center justify-between glass-card liquid-glass rounded-2xl p-4 backdrop-blur-md">
+        <!-- Search Input -->
+        <div class="relative flex-1 w-full sm:max-w-md">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg class="h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <input
+            type="text"
+            id="topic-search"
+            placeholder="Search topics..."
+            class="block w-full pl-10 pr-3 py-2 border border-blue-400/30 rounded-lg bg-white/5 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+
+        <!-- Sort Toggle -->
+        <div class="flex items-center gap-3">
+          <span class="text-sm text-neutral-300">Sort by:</span>
+          <div class="flex bg-white/5 rounded-lg p-1 border border-blue-400/30">
+            <button
+              id="sort-alphabetical"
+              class="sort-btn px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 active"
+              data-sort="alphabetical"
+            >
+              A-Z
+            </button>
+            <button
+              id="sort-posts"
+              class="sort-btn px-4 py-2 rounded-md text-sm font-medium transition-all duration-200"
+              data-sort="posts"
+            >
+              Most Posts
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Topics Grid -->
+      <div id="topics-grid" class="z-50 grid grid-cols-1 md:grid-cols-2 gap-6 my-8 animate-stagger">
+        {topics.map((topic) => {
+          const topicSlug = getTopicSlug(topic);
+          const data = topicData[topic] || {
+            image: "https://cdn.pixabay.com/photo/2020/02/15/16/50/security-4851428_1280.jpg"
+          };
+          
+          return (
+            <a 
+              href={`/topics/${topicSlug}`}
+              class="topic-card group relative overflow-hidden glass-card liquid-glass rounded-2xl transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20 hover:rotate-1"
+              data-topic={topic}
+              data-post-count={postsByTopic[topic].length}
+            >
+              <div class="aspect-[4/3] overflow-hidden">
+                <img 
+                  src={data.image} 
+                  alt={topic}
+                  class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 group-hover:brightness-110"
+                  loading="lazy"
+                />
+                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
               </div>
-            </div>
-            
-            <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-500 group-hover:translate-x-1">
-              <svg
-                class="w-6 h-6 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </div>
-          </a>
-        );
-      })}
-    </div>
+              
+              <div class="absolute bottom-0 left-0 right-0 p-6 text-white">
+                <div class="flex items-center justify-between mb-2">
+                  <h3 class="text-xl font-bold group-hover:text-blue-300 transition-colors topic-name">
+                    {topic}
+                  </h3>
+                  <span class="px-2 py-1 text-xs font-semibold bg-blue-500/20 backdrop-blur-sm border border-blue-400/30 rounded-full text-blue-100">
+                    {postsByTopic[topic].length} {postsByTopic[topic].length === 1 ? 'post' : 'posts'}
+                  </span>
+                </div>
+              </div>
+              
+              <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-500 group-hover:translate-x-1">
+                <svg
+                  class="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </a>
+          );
+        })}
+      </div>
     </section>
   </main>
+
+  <style>
+    .sort-btn {
+      color: #a3a3a3;
+    }
+    .sort-btn.active {
+      background-color: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+  </style>
+
+  <script>
+    const searchInput = document.getElementById('topic-search') as HTMLInputElement;
+    const topicsGrid = document.getElementById('topics-grid') as HTMLElement;
+    const sortAlphabetical = document.getElementById('sort-alphabetical') as HTMLButtonElement;
+    const sortPosts = document.getElementById('sort-posts') as HTMLButtonElement;
+    let currentSort = 'alphabetical';
+    let allTopics = Array.from(topicsGrid.children) as HTMLElement[];
+
+    // Search functionality
+    searchInput.addEventListener('input', (e) => {
+      const target = e.target as HTMLInputElement;
+      const searchTerm = target.value.toLowerCase();
+      
+      allTopics.forEach(topic => {
+        const topicName = topic.getAttribute('data-topic')?.toLowerCase() || '';
+        const shouldShow = topicName.includes(searchTerm);
+        
+        if (shouldShow) {
+          topic.style.display = '';
+        } else {
+          topic.style.display = 'none';
+        }
+      });
+    });
+
+    // Sort functionality
+    function sortTopics(sortType: string) {
+      currentSort = sortType;
+      
+      allTopics = Array.from(topicsGrid.children) as HTMLElement[];
+      
+      allTopics.sort((a, b) => {
+        if (sortType === 'alphabetical') {
+          const nameA = a.getAttribute('data-topic')?.toLowerCase() || '';
+          const nameB = b.getAttribute('data-topic')?.toLowerCase() || '';
+          return nameA.localeCompare(nameB);
+        } else {
+          // Sort by post count (descending)
+          const countA = parseInt(a.getAttribute('data-post-count') || '0');
+          const countB = parseInt(b.getAttribute('data-post-count') || '0');
+          return countB - countA;
+        }
+      });
+
+      // Re-append sorted topics
+      allTopics.forEach(topic => {
+        topicsGrid.appendChild(topic);
+      });
+    }
+
+    // Toggle buttons
+    [sortAlphabetical, sortPosts].forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Update active state
+        [sortAlphabetical, sortPosts].forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        // Sort topics
+        const sortType = btn.getAttribute('data-sort') || 'alphabetical';
+        sortTopics(sortType);
+      });
+    });
+
+    // Initialize with alphabetical sort
+    sortTopics('alphabetical');
+  </script>
 </Layout>

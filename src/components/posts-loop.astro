@@ -56,6 +56,10 @@ const postsLoop = sortedPosts.slice(0, count).map((post) => {
       <div
         class="relative cursor-pointer p-7 group glass-card liquid-glass transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-blue-500/10"
         onclick={`location.href = '${post.link}'`}
+        data-title={post.title}
+        data-description={post.description}
+        data-topics={post.topics.join(', ')}
+        data-technologies={(post.technologies || []).join(', ')}
       >
         <div class="relative z-30 duration-300 ease-out group-hover:-translate-y-1">
           <div class="mb-3">

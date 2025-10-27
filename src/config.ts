@@ -13,8 +13,25 @@ export const siteConfig = {
   },
   aboutMe:
     "I am a Senior Computer Science & Cybersecurity student at The University of Texas at San Antonio (UTSA) and I am currently interning as an IT Auditor. I've gained hands-on experience with risk-based IT Audit assessments, frameworks, and full-stack web developing skills.",
-  skills: ["Javascript", "React", "Next.js", "Python", "Linux", "SQL", "NIST"],
+  skills: [
+    "Next.js", 
+    "Python", 
+    "SQL", 
+    "Threat Hunting",
+    "SIEM",
+    "Proxmox",
+    "Linux",
+    "DFIR",    "NIST",
+    "IT Audit"
+  ],
   projects: [
+    {
+      name: "Cloud-Based SIEM Home Lab",
+      description:
+        "Built a cloud-based SIEM/SOC lab using Azure and Microsoft Sentinel. Deployed a public-facing Windows VM to capture real-world attack logs, recorded 90,000+ failed authentication attempts in 12 hours, and performed threat hunting using KQL queries and geolocation data.",
+      link: "/post/soclab",
+      skills: ["Azure", "Microsoft Sentinel", "Threat Hunting"],
+    },
     {
       name: "Steganography Project",
       description:

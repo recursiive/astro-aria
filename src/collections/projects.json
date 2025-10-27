@@ -19,5 +19,12 @@
 		"image": "/assets/images/projects/tracerfire.jpg",
 		"url": "https://www.linkedin.com/posts/ryananthunt_this-weekend-i-competed-in-the-tracerfire-activity-7302135454970060800-mpQe?utm_source=share&utm_medium=member_desktop&rcm=ACoAAEapH0EBE3YP-Lwgk0Lr8Q4nvL9GIrNacac",
 		"technologies": ["elastic"]
+	},
+	{
+		"name": "Cloud-Based SIEM Home Lab",
+		"description": "Built a cloud-based SIEM/SOC lab using Azure and Microsoft Sentinel. Deployed a public-facing Windows VM to capture real-world attack logs, recorded 90,000+ failed authentication attempts in 12 hours, and performed threat hunting using KQL queries and geolocation data.",
+		"image": "/assets/images/topics/siem-homelab.png",
+		"url": "/post/soclab",
+		"technologies": ["azure", "sentinel"]
 	}
 ]

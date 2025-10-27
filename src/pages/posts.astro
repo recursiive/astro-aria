@@ -2,8 +2,11 @@
 import PageHeading from "../components/page-heading.astro";
 import PostsLoop from "../components/posts-loop.astro";
 import Layout from "../layouts/main.astro";
+import { getCollection } from "astro:content";
 
 export const prerender = true;
+
+const allPosts = await getCollection("post");
 ---
 
 <Layout title="Blog Posts | Ryan Hunt - Cybersecurity Blog">
@@ -17,9 +20,156 @@ export const prerender = true;
           a deep dive into my learning journey
         </p>
       </div>
-      <div class="z-50 grid grid-cols-1 md:grid-cols-2 gap-5 my-8 animate-stagger">
+
+      <!-- Search and Filter Controls -->
+      <div class="mb-8 space-y-4">
+        <!-- Search Bar -->
+        <div class="glass-card liquid-glass rounded-2xl p-4 backdrop-blur-md">
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              id="post-search"
+              placeholder="Search posts by title or description..."
+              class="block w-full pl-10 pr-3 py-2 border border-blue-400/30 rounded-lg bg-white/5 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+
+        <!-- Sort and Results -->
+        <div class="glass-card liquid-glass rounded-2xl p-4 backdrop-blur-md">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <!-- Sort Dropdown -->
+            <div class="flex items-center gap-3">
+              <span class="text-sm font-medium text-neutral-300 flex items-center gap-2">
+                <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                </svg>
+                Sort by:
+              </span>
+              <select
+                id="sort-dropdown"
+                class="px-4 py-2 rounded-lg border border-blue-400/30 glass-card backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-blue-400/50 cursor-pointer"
+              >
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="title-asc">Title (A-Z)</option>
+                <option value="title-desc">Title (Z-A)</option>
+              </select>
+            </div>
+            
+            <!-- Results Count -->
+            <div class="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/10 border border-blue-400/20">
+              <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span class="text-sm text-neutral-300">
+                Showing <span id="results-count" class="font-semibold text-blue-400"></span> posts
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Posts Grid -->
+      <div id="posts-grid" class="z-50 grid grid-cols-1 md:grid-cols-2 gap-5 my-8 animate-stagger">
         <PostsLoop count="999999999" />
       </div>
     </section>
   </main>
+
+  <style>
+    select {
+      background-color: rgba(255, 255, 255, 0.05) !important;
+    }
+    
+    select option {
+      background-color: #1f2937 !important;
+      color: white;
+    }
+  </style>
+
+  <script>
+    const searchInput = document.getElementById('post-search') as HTMLInputElement;
+    const sortDropdown = document.getElementById('sort-dropdown') as HTMLSelectElement;
+    const postsGrid = document.getElementById('posts-grid') as HTMLElement;
+    const resultsCount = document.getElementById('results-count') as HTMLElement;
+    
+    let allPosts = Array.from(postsGrid.children) as HTMLElement[];
+
+    // Search functionality
+    searchInput.addEventListener('input', () => {
+      applyFiltersAndSort();
+    });
+
+    // Sort functionality
+    sortDropdown.addEventListener('change', () => {
+      applyFiltersAndSort();
+    });
+
+    function applyFiltersAndSort() {
+      const searchTerm = searchInput.value.toLowerCase();
+      const sortOption = sortDropdown.value;
+      let visibleCount = 0;
+      const visiblePosts: HTMLElement[] = [];
+
+      // First, filter by search term
+      allPosts.forEach((post: HTMLElement) => {
+        const title = post.getAttribute('data-title')?.toLowerCase() || '';
+        const description = post.getAttribute('data-description')?.toLowerCase() || '';
+
+        const matchesSearch = !searchTerm || 
+          title.includes(searchTerm) || 
+          description.includes(searchTerm);
+
+        if (matchesSearch) {
+          post.style.display = '';
+          visiblePosts.push(post);
+          visibleCount++;
+        } else {
+          post.style.display = 'none';
+        }
+      });
+
+      // Then, sort visible posts
+      const allPostsArray = Array.from(allPosts);
+      
+      if (sortOption === 'oldest') {
+        // Reverse the array for oldest first
+        visiblePosts.reverse();
+      } else {
+        visiblePosts.sort((a, b) => {
+          const titleA = a.getAttribute('data-title') || '';
+          const titleB = b.getAttribute('data-title') || '';
+          
+          switch (sortOption) {
+            case 'newest':
+              // Keep original order (newest first)
+              return 0;
+            case 'title-asc':
+              return titleA.localeCompare(titleB);
+            case 'title-desc':
+              return titleB.localeCompare(titleA);
+            default:
+              return 0;
+          }
+        });
+      }
+
+      // Re-append sorted posts
+      visiblePosts.forEach(post => {
+        postsGrid.appendChild(post);
+      });
+
+      // Update results count
+      resultsCount.textContent = visibleCount.toString();
+    }
+
+    // Initialize results count
+    resultsCount.textContent = allPosts.length.toString();
+  </script>
 </Layout>
