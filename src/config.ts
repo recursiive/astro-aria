@@ -22,7 +22,7 @@ export const siteConfig = {
     "Proxmox",
     "Linux",
     "DFIR",    "NIST",
-    "IT Audit"
+    "IT Audit","Penetration Testing"
   ],
   projects: [
     {
