@@ -15,7 +15,7 @@ Super stoked to finally get my hands on some hardware to get my homelab up and r
 - [ ] Setup `hunt.local` domain through Windows Server 2022
 - [ ] Setup domain joined deprecated Windows 10 vulnerable machine to be attackable
 
-![setup](https://i.imgur.com/6NT67qx.png)
+![setup](https://i.imgur.com/Qd6Sii9.png)
 
 ### Current Hardware
 - Optiplex 3050
