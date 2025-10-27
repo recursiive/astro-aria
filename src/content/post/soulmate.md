@@ -3,7 +3,7 @@ layout: ../../layouts/post.astro
 title: Soulmate Write-Up
 description: A comprehensive writeup of the HackTheBox Soulmate machine.
 dateFormatted: Oct 19, 2025
-topic: ["Red Team"]
+topic: ["Attack, HackTheBox"]
 technologies: ["Linux", "HackTheBox"]
 ---
 
