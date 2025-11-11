@@ -21,10 +21,17 @@
 		"technologies": ["elastic"]
 	},
 	{
-		"name": "Cloud-Based SIEM Home Lab",
+		"name": "Cloud-Based SIEM",
 		"description": "Built a cloud-based SIEM/SOC lab using Azure and Microsoft Sentinel. Deployed a public-facing Windows VM to capture real-world attack logs, recorded 90,000+ failed authentication attempts in 12 hours, and performed threat hunting using KQL queries and geolocation data.",
 		"image": "/assets/images/topics/siem-homelab.png",
 		"url": "/post/soclab",
 		"technologies": ["azure", "sentinel"]
+	},
+	{
+		"name": "Homelab",
+		"description": "A homelab environment built using Proxmox VE and virtual machines running a simulated enterprise environment.",
+		"image": "https://i.imgur.com/CNlS5eO.png",
+		"url": "/post/homelab",
+		"technologies": ["proxmox", "linux"]
 	}
 ]

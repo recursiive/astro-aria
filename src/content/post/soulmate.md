@@ -5,6 +5,8 @@ description: A comprehensive writeup of the HackTheBox Soulmate machine.
 dateFormatted: Oct 19, 2025
 topic: ["Attack", "HackTheBox"]
 technologies: ["Linux", "HackTheBox"]
+tags: ["Penetration Testing", "HackTheBox", "CTF", "Exploitation"]
+hidden: false
 ---
 
 ![pwn](https://i.imgur.com/W5RvROp.png)

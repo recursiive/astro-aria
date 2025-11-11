@@ -5,6 +5,8 @@ description: A comprehensive analysis of the 2020 SolarWinds breach detailing AP
 dateFormatted: Feb 4, 2025
 topic: ["Threat Intelligence"]
 technologies: []
+tags: ["Threat Intelligence", "APT", "Supply Chain", "Incident Response"]
+hidden: false
 ---
 
 In my university class, **CS4673 — Cyber Operations**, I was tasked with analyzing the Solarwinds breach that occured in 2020–2021. As I conducted research on this incident, I felt compelled to write my first blog post over this security incident.

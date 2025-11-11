@@ -202,11 +202,23 @@ const topicInfo = topicData[topicName] || {
                 </div>
               </div>
             </div>
-            <p class="text-sm text-neutral-600 dark:text-neutral-400">
+            {post.data.hidden && (
+              <div class="mb-3 p-3 rounded-lg backdrop-blur-md bg-amber-500/20 border border-amber-400/30 shadow-lg shadow-amber-500/10">
+                <div class="flex items-center gap-2">
+                  <svg class="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <p class="text-sm font-medium text-amber-200 dark:text-amber-300">
+                    This post is still under works. Check back soon!
+                  </p>
+                </div>
+              </div>
+            )}
+            <p class={`text-sm text-neutral-600 dark:text-neutral-400 ${post.data.hidden ? 'blur-sm select-none pointer-events-none' : ''}`}>
               <span>{post.data.description}</span>
             </p>
             {post.data.technologies && post.data.technologies.length > 0 && (
-              <div class="flex flex-wrap gap-2 mt-3">
+              <div class={`flex flex-wrap gap-2 mt-3 ${post.data.hidden ? 'blur-sm select-none pointer-events-none' : ''}`}>
                 {post.data.technologies.map((tech: string) => (
                   <img 
                     src={getTechIcon(tech)} 
@@ -217,7 +229,7 @@ const topicInfo = topicData[topicName] || {
                 ))}
               </div>
             )}
-            <div class="mt-2.5 text-xs font-medium text-neutral-800 dark:text-neutral-300">
+            <div class={`mt-2.5 text-xs font-medium text-neutral-800 dark:text-neutral-300 ${post.data.hidden ? 'blur-sm select-none pointer-events-none' : ''}`}>
               Posted on {post.data.dateFormatted}
             </div>
           </div>

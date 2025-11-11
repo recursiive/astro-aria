@@ -5,6 +5,8 @@ description: A comprehensive writeup of the QRadar 101 challenge from CyberDefen
 dateFormatted: Oct 5, 2025
 topic: ["Threat Hunting", "Threat Intelligence", "CyberDefenders"]
 technologies: ["cyberdefenders"]
+tags: ["Threat Hunting", "SIEM", "Log Analysis", "Incident Response"]
+hidden: false
 ---
 
 ![QRadar 101 Challenge](https://miro.medium.com/v2/resize:fit:322/format:webp/1*OGkjuHgXm9inBmtjczPOGA.png)

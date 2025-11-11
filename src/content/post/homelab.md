@@ -5,6 +5,8 @@ description: A in-depth writeup of setting up my homelab.
 dateFormatted: Oct 22, 2025
 topic: ["Homelab", "Active Directory"]
 technologies: ["Proxmox", "Linux", "Windows"]
+tags: ["Homelab", "Infrastructure", "Virtualization", "Docker"]
+hidden: false
 ---
 
 Super stoked to finally get my hands on some hardware to get my homelab up and running.
@@ -21,7 +23,7 @@ There is so much oppourtunity for learning and messing around with different too
 - [x] Set up Proxmox hypervisor
 - [x] Set up Docker instance running Debian 13 for Teslamate Web Server using Proxmox hypervisor
 - [x] Setup `hunt.local` domain through Windows Server 2022
-- [ ] Setup domain joined deprecated Windows 10 vulnerable machine to be attackable
+- [x] Setup domain joined Windows 10 workstation
 - [ ] Caffeine Intake 
 
 ![setup](https://i.imgur.com/Qd6Sii9.png)
@@ -73,6 +75,8 @@ Once the DNS and static IP was configured, I added the workstation to Active Dir
 After a reboot of the workstation, the workstation appeared in my Active Directory workstation tree, and navigating to users, I can begin creating domain users. I created two users `user` and `admin`.
 
 ![DOMAIN](https://i.imgur.com/uy3QFzF.png)
+
+*I think its fair to note in this process, I forgot my root password for Promox and had to find out how to reset root password through the boot parameters.* 🥲
 
 ------------------------------------------------
 
@@ -177,11 +181,12 @@ After rebooting, I confirmed it starts the web servers on boot.
 
 ![overview](https://i.imgur.com/LfAads4.png)
 
-Currently, were looking tight on resources, I will definitely need to upgrade the Optiplex 3050 or look at some different machines for host usage.
+Currently, were looking tight on resources with 3 VM's running, I will definitely need to upgrade the Optiplex 3050 or look at some different machines for host usage.
 
 ### Next Steps
 - [ ] Implement Wazuh & ELK Stack for Open-Source SIEM & XDR.
 - [ ] Configure Fortinet Fortigate 60D firewall.
+- [ ] Research proxying & file servers
 
 At the current time, I'm under a standstill, I'm looking to get my hands on some more RAM to increase the memory for my Optiplex Micro 3050. Currently with 8GB, we can run 3VM's (2 of them being pretty heavy due to Windows).
 

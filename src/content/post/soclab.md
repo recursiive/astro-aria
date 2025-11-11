@@ -5,6 +5,7 @@ description: A comprehensive writeup of my virtualized SIEM/SOC lab.
 dateFormatted: Oct 17, 2025
 topic: ["Security Engineering"]
 technologies: ["Azure", "Sentinel"]
+tags: ["SIEM", "Azure", "Threat Hunting", "Security Engineering"]
 ---
 ![Microsoft Azure](https://oxen.tech/wp-content/uploads/2020/09/microsoftazure-featured.png)
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;![Microsoft Sentinel](https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQmy1XAX_N7bV8NfKvzKMOei1Mr6SFnsohTerTIIVymsn8fH-HPr-eZypPAzo8kzyVgv6Y&usqp=CAU)
