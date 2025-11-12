@@ -38,14 +38,37 @@ const { frontmatter } = Astro.props;
             >
               {frontmatter.title}
             </h1>
-            <div class="flex items-center gap-4 mt-2 md:mt-1">
+            <div class="flex flex-wrap items-center gap-3 md:gap-4 mt-2 md:mt-1">
               {frontmatter.dateFormatted && (
                 <p class="text-sm text-neutral-500 dark:text-neutral-400">
                   Published on {frontmatter.dateFormatted}
                 </p>
               )}
-              <span id="view-count" class="text-sm text-neutral-500 dark:text-neutral-400">
-                {/* View count will be populated by tracking script */}
+              <span id="view-count" class="inline-flex items-center gap-1.5 text-sm text-neutral-500 dark:text-neutral-400 hidden">
+                <svg 
+                  id="view-count-icon"
+                  class="w-4 h-4 text-neutral-400 dark:text-neutral-500 flex-shrink-0" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path 
+                    stroke-linecap="round" 
+                    stroke-linejoin="round" 
+                    stroke-width="2" 
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" 
+                  />
+                  <path 
+                    stroke-linecap="round" 
+                    stroke-linejoin="round" 
+                    stroke-width="2" 
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" 
+                  />
+                </svg>
+                <span id="view-count-text" class="tabular-nums">
+                  {/* View count will be populated by tracking script */}
+                </span>
               </span>
             </div>
           </div>
@@ -281,19 +304,35 @@ const { frontmatter } = Astro.props;
       const isProduction = window.location.hostname !== 'localhost' && 
                           window.location.hostname !== '127.0.0.1';
       
+      // Helper function to update view count display
+      function updateViewCount(views) {
+        const viewCountText = document.getElementById('view-count-text');
+        const viewCountContainer = document.getElementById('view-count');
+        
+        if (viewCountText && views !== undefined && views > 0) {
+          // Format number with commas for readability
+          const formattedViews = views.toLocaleString();
+          viewCountText.textContent = formattedViews;
+          if (viewCountContainer) {
+            viewCountContainer.classList.remove('hidden');
+            viewCountContainer.style.display = 'inline-flex';
+          }
+        } else if (viewCountContainer) {
+          viewCountContainer.classList.add('hidden');
+          viewCountContainer.style.display = 'none';
+        }
+      }
+      
       // Load initial view count (works in both dev and production)
       fetch(`/api/track-view?slug=${encodeURIComponent(slug)}`)
         .then(response => response.json())
         .then(result => {
-          const viewCountEl = document.getElementById('view-count');
-          if (viewCountEl && result.views !== undefined) {
-            viewCountEl.textContent = `${result.views} view${result.views !== 1 ? 's' : ''}`;
-          }
+          updateViewCount(result.views);
         })
         .catch(() => {
           // Hide view count if API is not available
-          const viewCountEl = document.getElementById('view-count');
-          if (viewCountEl) viewCountEl.style.display = 'none';
+          const viewCountContainer = document.getElementById('view-count');
+          if (viewCountContainer) viewCountContainer.style.display = 'none';
         });
       
       // Track view (only in production)
@@ -311,10 +350,7 @@ const { frontmatter } = Astro.props;
         .then(response => response.json())
         .then(result => {
           // Update view count display after tracking
-          const viewCountEl = document.getElementById('view-count');
-          if (viewCountEl && result.views !== undefined) {
-            viewCountEl.textContent = `${result.views} view${result.views !== 1 ? 's' : ''}`;
-          }
+          updateViewCount(result.views);
         })
         .catch(err => {
           // Silently fail - tracking shouldn't break the page
