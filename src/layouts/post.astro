@@ -7,9 +7,6 @@ const { frontmatter } = Astro.props;
   <main
     class="relative z-30 max-w-4xl pb-1 mx-auto mt-10 bg-white dark:bg-neutral-950 md:rounded-t-md text-neutral-900"
   >
-    {/* URL Path Display - Outside and above post box */}
-    <div id="url-path" class="text-center mb-4 text-sm text-white dark:text-neutral-200 font-semibold" style="font-family: 'Ubuntu Mono', 'DejaVu Sans Mono', 'Liberation Mono', 'Courier New', 'Courier', monospace; background: transparent;"></div>
-    
     <div
       class="relative flex flex-col px-5 pt-6 border-t border-b-0 md:border-r md:border-l md:pt-20 lg:px-0 justify-stretch md:rounded-t-2xl border-neutral-200 dark:border-neutral-800"
     >
@@ -252,31 +249,9 @@ const { frontmatter } = Astro.props;
         headings.forEach(heading => observer.observe(heading));
       }
     }
-
-
-    function initURLPath() {
-      const urlPathElement = document.getElementById('url-path');
-      if (!urlPathElement) return;
-      
-      // Get the current pathname
-      const pathname = window.location.pathname;
-      
-      // Format the path: /post/meerkat -> ~/recursiive/post/meerkat
-      // Remove leading slash and format
-      const formattedPath = pathname
-        .replace(/^\/+/, '') // Remove leading slashes
-        .split('/')
-        .filter(Boolean) // Remove empty strings
-        .join('/');
-      
-      const displayPath = formattedPath ? `~/recursiive/${formattedPath}` : '~/recursiive';
-      
-      urlPathElement.textContent = displayPath;
-    }
     
     // Initialize when DOM is ready
     function init() {
-      initURLPath();
       formatJSONCodeBlocks();
       initTableOfContents();
       initCodeBlockExpansion();
