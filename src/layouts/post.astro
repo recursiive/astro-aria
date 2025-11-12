@@ -7,6 +7,9 @@ const { frontmatter } = Astro.props;
   <main
     class="relative z-30 max-w-4xl pb-1 mx-auto mt-10 bg-white dark:bg-neutral-950 md:rounded-t-md text-neutral-900"
   >
+    {/* URL Path Display - Outside and above post box */}
+    <div id="url-path" class="text-center mb-4 text-sm text-white dark:text-neutral-200 font-semibold" style="font-family: 'Ubuntu Mono', 'DejaVu Sans Mono', 'Liberation Mono', 'Courier New', 'Courier', monospace; background: transparent;"></div>
+    
     <div
       class="relative flex flex-col px-5 pt-6 border-t border-b-0 md:border-r md:border-l md:pt-20 lg:px-0 justify-stretch md:rounded-t-2xl border-neutral-200 dark:border-neutral-800"
     >
@@ -248,85 +251,33 @@ const { frontmatter } = Astro.props;
       }
     }
 
-    function initImageZoom() {
-      // Create modal
-      const modal = document.createElement('div');
-      modal.className = 'image-zoom-modal';
-      modal.innerHTML = `
-        <button class="image-zoom-close" aria-label="Close">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-        <img src="" alt="Zoomed image" />
-      `;
-      document.body.appendChild(modal);
 
-      const modalImg = modal.querySelector('img');
-      const closeBtn = modal.querySelector('.image-zoom-close');
-
-      // Add zoom icon and click handler to all images in prose
-      const images = document.querySelectorAll('.prose img');
-      images.forEach((img) => {
-        // Skip if already has zoom wrapper
-        if (img.parentElement?.classList.contains('image-zoom-wrapper')) return;
-
-        // Create wrapper for positioning
-        const wrapper = document.createElement('div');
-        wrapper.className = 'image-zoom-wrapper';
-        wrapper.style.position = 'relative';
-        wrapper.style.display = 'inline-block';
-        img.parentNode?.insertBefore(wrapper, img);
-        wrapper.appendChild(img);
-
-        // Create zoom icon
-        const zoomIcon = document.createElement('div');
-        zoomIcon.className = 'image-zoom-icon';
-        zoomIcon.innerHTML = `
-          <svg fill="none" stroke="white" viewBox="0 0 24 24" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
-          </svg>
-        `;
-        wrapper.appendChild(zoomIcon);
-
-        // Click handler
-        img.addEventListener('click', (e) => {
-          e.preventDefault();
-          const imageElement = img as HTMLImageElement;
-          modalImg.src = imageElement.src;
-          modalImg.alt = imageElement.alt || 'Zoomed image';
-          modal.classList.add('active');
-          document.body.style.overflow = 'hidden';
-        });
-      });
-
-      // Close modal handlers
-      const closeModal = () => {
-        modal.classList.remove('active');
-        document.body.style.overflow = '';
-      };
-
-      closeBtn.addEventListener('click', closeModal);
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-          closeModal();
-        }
-      });
-
-      // Close on Escape key
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.classList.contains('active')) {
-          closeModal();
-        }
-      });
+    function initURLPath() {
+      const urlPathElement = document.getElementById('url-path');
+      if (!urlPathElement) return;
+      
+      // Get the current pathname
+      const pathname = window.location.pathname;
+      
+      // Format the path: /post/meerkat -> ~/recursiion/post/meerkat
+      // Remove leading slash and format
+      const formattedPath = pathname
+        .replace(/^\/+/, '') // Remove leading slashes
+        .split('/')
+        .filter(Boolean) // Remove empty strings
+        .join('/');
+      
+      const displayPath = formattedPath ? `~/recursiion/${formattedPath}` : '~/recursiion';
+      
+      urlPathElement.textContent = displayPath;
     }
     
     // Initialize when DOM is ready
     function init() {
+      initURLPath();
       formatJSONCodeBlocks();
       initTableOfContents();
       initCodeBlockExpansion();
-      initImageZoom();
     }
 
     if (document.readyState === 'loading') {
