@@ -5,5 +5,5 @@ import tailwind from "@astrojs/tailwind";
 // https://astro.build/config
 export default defineConfig({
 	integrations: [tailwind()],
-	output: "static",
+	output: "hybrid", // Enable hybrid mode for API routes while keeping pages static
 });

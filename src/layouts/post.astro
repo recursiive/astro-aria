@@ -38,11 +38,16 @@ const { frontmatter } = Astro.props;
             >
               {frontmatter.title}
             </h1>
-            {frontmatter.dateFormatted && (
-              <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-2 md:mt-1">
-                Published on {frontmatter.dateFormatted}
-              </p>
-            )}
+            <div class="flex items-center gap-4 mt-2 md:mt-1">
+              {frontmatter.dateFormatted && (
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                  Published on {frontmatter.dateFormatted}
+                </p>
+              )}
+              <span id="view-count" class="text-sm text-neutral-500 dark:text-neutral-400">
+                {/* View count will be populated by tracking script */}
+              </span>
+            </div>
           </div>
           {frontmatter.image && (
             <img 
@@ -262,5 +267,60 @@ const { frontmatter } = Astro.props;
     } else {
       init();
     }
+  </script>
+
+  <!-- View Tracking Script -->
+  <script is:inline>
+    (function() {
+      // Extract slug from URL (e.g., /post/meerkat -> meerkat)
+      const pathParts = window.location.pathname.split('/').filter(Boolean);
+      const slug = pathParts[pathParts.length - 1];
+      
+      if (!slug || slug === 'post') return; // Skip if no valid slug
+      
+      const isProduction = window.location.hostname !== 'localhost' && 
+                          window.location.hostname !== '127.0.0.1';
+      
+      // Load initial view count (works in both dev and production)
+      fetch(`/api/track-view?slug=${encodeURIComponent(slug)}`)
+        .then(response => response.json())
+        .then(result => {
+          const viewCountEl = document.getElementById('view-count');
+          if (viewCountEl && result.views !== undefined) {
+            viewCountEl.textContent = `${result.views} view${result.views !== 1 ? 's' : ''}`;
+          }
+        })
+        .catch(() => {
+          // Hide view count if API is not available
+          const viewCountEl = document.getElementById('view-count');
+          if (viewCountEl) viewCountEl.style.display = 'none';
+        });
+      
+      // Track view (only in production)
+      if (isProduction) {
+        const data = JSON.stringify({ slug });
+        
+        fetch('/api/track-view', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: data,
+          keepalive: true
+        })
+        .then(response => response.json())
+        .then(result => {
+          // Update view count display after tracking
+          const viewCountEl = document.getElementById('view-count');
+          if (viewCountEl && result.views !== undefined) {
+            viewCountEl.textContent = `${result.views} view${result.views !== 1 ? 's' : ''}`;
+          }
+        })
+        .catch(err => {
+          // Silently fail - tracking shouldn't break the page
+          console.debug('View tracking failed:', err);
+        });
+      }
+    })();
   </script>
 </Layout>
