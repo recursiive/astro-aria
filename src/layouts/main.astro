@@ -2,7 +2,6 @@
 import Footer from "../components/footer.astro";
 import Header from "../components/header.astro";
 import Dots from "../components/dots.astro";
-import LoadingScreen from "../components/loading-screen.astro";
 import "../assets/css/main.css";
 const { 
   title = "Ryan Hunt - Cybersecurity Blog | Threat Hunting & Security Analysis", 
@@ -221,7 +220,6 @@ const {
     <Fragment set:html={import.meta.env.HEADER_INJECT} />
   </head>
   <body class="antialiased bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 min-h-screen">
-    <LoadingScreen />
     <Dots />
     <Header />
     <slot />

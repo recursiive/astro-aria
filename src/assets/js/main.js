@@ -22,9 +22,6 @@ document.addEventListener("DOMContentLoaded", () => {
 	applyMenuItemClasses();
 	evaluateHeaderPosition();
 	mobileMenuFunctionality();
-	
-	// Handle initial page load only
-	handlePageLoad();
 });
 
 window.stickyHeaderFuncionality = () => {
@@ -148,42 +145,3 @@ document.addEventListener("DOMContentLoaded", () => {
 		}
 	});
 });
-
-// Loading screen functionality - only on initial page load
-function handlePageLoad() {
-	// Check if this is the first visit (not a navigation)
-	// Use sessionStorage to track if we've already shown the loading screen
-	const hasShownLoading = sessionStorage.getItem('loadingScreenShown');
-	
-	if (!hasShownLoading) {
-		// Show loading screen only on first visit
-		if (typeof window.showLoadingScreen === 'function') {
-			window.showLoadingScreen();
-		}
-		
-		// Mark that we've shown the loading screen
-		sessionStorage.setItem('loadingScreenShown', 'true');
-		
-		// Hide loading screen when page is fully loaded
-		window.addEventListener('load', () => {
-			// Small delay to ensure smooth transition
-			setTimeout(() => {
-				if (typeof window.hideLoadingScreen === 'function') {
-					window.hideLoadingScreen();
-				}
-			}, 800);
-		});
-		
-		// Fallback: hide after a maximum time
-		setTimeout(() => {
-			if (typeof window.hideLoadingScreen === 'function') {
-				window.hideLoadingScreen();
-			}
-		}, 3000);
-	} else {
-		// If we've already shown it, hide it immediately
-		if (typeof window.hideLoadingScreen === 'function') {
-			window.hideLoadingScreen();
-		}
-	}
-}
