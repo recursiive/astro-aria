@@ -10,6 +10,7 @@ const postCollection = defineCollection({
 		technologies: z.array(z.string()).optional(),
 		tags: z.array(z.string()).optional(),
 		hidden: z.boolean().optional().default(false),
+		image: z.string().optional(),
 	}),
 });
 

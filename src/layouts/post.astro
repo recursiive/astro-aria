@@ -31,12 +31,26 @@ const { frontmatter } = Astro.props;
             ))}
           </div>
         )}
-        <div class="flex items-start justify-between mb-4">
-          <h1
-            class="text-3xl font-bold leading-tight tracking-tighter text-left md:mb-4 md:text-4xl dark:text-neutral-100 lg:text-5xl md:leading-none flex-1"
-          >
-            {frontmatter.title}
-          </h1>
+        <div class="flex items-start justify-between mb-4 gap-4">
+          <div class="flex-1">
+            <h1
+              class="text-3xl font-bold leading-tight tracking-tighter text-left md:mb-2 md:text-4xl dark:text-neutral-100 lg:text-5xl md:leading-none"
+            >
+              {frontmatter.title}
+            </h1>
+            {frontmatter.dateFormatted && (
+              <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-2 md:mt-1">
+                Published on {frontmatter.dateFormatted}
+              </p>
+            )}
+          </div>
+          {frontmatter.image && (
+            <img 
+              src={frontmatter.image} 
+              alt={frontmatter.title}
+              class="w-20 h-20 md:w-24 md:h-24 flex-shrink-0 rounded-lg object-cover"
+            />
+          )}
         </div>
         {frontmatter.hidden && (
           <div class="mb-6 p-4 rounded-lg backdrop-blur-md bg-amber-500/20 border border-amber-400/30 shadow-lg shadow-amber-500/10">
@@ -53,10 +67,272 @@ const { frontmatter } = Astro.props;
       </div>
     </div>
 
-    <article
-      class={`w-full max-w-2xl mx-auto mb-20 prose-sm prose px-7 lg:px-0 lg:prose-lg dark:prose-invert ${frontmatter.hidden ? '[&>*]:blur-sm [&>*]:select-none [&>*]:pointer-events-none' : ''}`}
-    >
-      <slot />
-    </article>
+    <div class="relative w-full max-w-6xl mx-auto px-7 lg:px-0">
+      <article
+        class={`w-full max-w-2xl mx-auto mb-20 md:mb-20 prose-sm prose lg:prose-lg dark:prose-invert post-article ${frontmatter.hidden ? '[&>*]:blur-sm [&>*]:select-none [&>*]:pointer-events-none' : ''}`}
+      >
+        <slot />
+      </article>
+      
+      <aside id="table-of-contents" class="toc-sidebar"></aside>
+    </div>
   </main>
+
+  <script>
+    function formatJSONCodeBlocks() {
+      const codeBlocks = document.querySelectorAll('.prose pre code[class*="language-json"]');
+      
+      codeBlocks.forEach((code) => {
+        try {
+          const text = code.textContent.trim();
+          if (text) {
+            // Try to parse and format JSON
+            const parsed = JSON.parse(text);
+            const formatted = JSON.stringify(parsed, null, 2);
+            code.textContent = formatted;
+          }
+        } catch (e) {
+          // If it's not valid JSON, leave it as is
+        }
+      });
+    }
+
+    function initCodeBlockExpansion() {
+      const codeBlocks = document.querySelectorAll('.prose pre');
+      
+      codeBlocks.forEach((pre) => {
+        const code = pre.querySelector('code');
+        if (!code) return;
+        
+        // Check if content exceeds max height
+        const maxHeight = 400; // Match CSS max-height
+        const scrollHeight = code.scrollHeight;
+        
+        if (scrollHeight > maxHeight) {
+          // Create expand button
+          const expandBtn = document.createElement('button');
+          expandBtn.className = 'code-expand-btn';
+          expandBtn.innerHTML = `
+            <span>Expand</span>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          `;
+          
+          expandBtn.addEventListener('click', () => {
+            pre.classList.toggle('expanded');
+            const span = expandBtn.querySelector('span');
+            const svg = expandBtn.querySelector('svg');
+            if (pre.classList.contains('expanded')) {
+              span.textContent = 'Collapse';
+              svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />';
+            } else {
+              span.textContent = 'Expand';
+              svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />';
+            }
+          });
+          
+          pre.appendChild(expandBtn);
+        }
+      });
+    }
+
+    function initTableOfContents() {
+      const article = document.querySelector('article.prose') || document.querySelector('article');
+      if (!article) return;
+
+      const headings = article.querySelectorAll('h2, h3, h4');
+      if (headings.length === 0) {
+        const tocContainer = document.getElementById('table-of-contents');
+        if (tocContainer) tocContainer.style.display = 'none';
+        return;
+      }
+
+      const tocContainer = document.getElementById('table-of-contents');
+      if (!tocContainer) return;
+
+      const tocList = document.createElement('ul');
+      tocList.className = 'toc-list';
+      
+      const stack = [{ level: 1, element: tocList }];
+      
+      headings.forEach((heading) => {
+        // Generate ID if it doesn't have one
+        let id = heading.id;
+        if (!id) {
+          id = heading.textContent
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+          heading.id = id;
+        }
+
+        const level = parseInt(heading.tagName.substring(1));
+        const listItem = document.createElement('li');
+        listItem.className = `toc-item toc-level-${level}`;
+        
+        const link = document.createElement('a');
+        link.href = `#${id}`;
+        link.textContent = heading.textContent;
+        link.className = 'toc-link';
+        
+        // Smooth scroll behavior
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const target = document.getElementById(id);
+          if (target) {
+            const offset = 80;
+            const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - offset;
+            window.scrollTo({
+              top: targetPosition,
+              behavior: 'smooth'
+            });
+            history.pushState(null, '', `#${id}`);
+          }
+        });
+        
+        listItem.appendChild(link);
+        
+        // Find the appropriate parent list based on level
+        while (stack.length > 1 && stack[stack.length - 1].level >= level) {
+          stack.pop();
+        }
+        
+        const parent = stack[stack.length - 1].element;
+        const parentLevel = stack[stack.length - 1].level;
+        
+        // If this is a deeper level, create a nested list
+        if (level > parentLevel) {
+          const nestedList = document.createElement('ul');
+          nestedList.className = 'toc-sublist';
+          listItem.appendChild(nestedList);
+          parent.appendChild(listItem);
+          stack.push({ level, element: nestedList });
+        } else {
+          parent.appendChild(listItem);
+        }
+      });
+
+      if (tocList.children.length > 0) {
+        const tocTitle = document.createElement('h3');
+        tocTitle.className = 'toc-title';
+        tocTitle.textContent = 'Table of Contents';
+        tocContainer.appendChild(tocTitle);
+        tocContainer.appendChild(tocList);
+        
+        // Scroll spy functionality
+        const tocLinks = tocContainer.querySelectorAll('.toc-link');
+        const observerOptions = {
+          rootMargin: '-20% 0px -70% 0px',
+          threshold: 0
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              // Remove active class from all links
+              tocLinks.forEach(link => link.classList.remove('active'));
+              
+              // Add active class to corresponding TOC link
+              const id = entry.target.id;
+              const activeLink = tocContainer.querySelector(`a[href="#${id}"]`);
+              if (activeLink) {
+                activeLink.classList.add('active');
+              }
+            }
+          });
+        }, observerOptions);
+        
+        // Observe all headings
+        headings.forEach(heading => observer.observe(heading));
+      }
+    }
+
+    function initImageZoom() {
+      // Create modal
+      const modal = document.createElement('div');
+      modal.className = 'image-zoom-modal';
+      modal.innerHTML = `
+        <button class="image-zoom-close" aria-label="Close">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        <img src="" alt="Zoomed image" />
+      `;
+      document.body.appendChild(modal);
+
+      const modalImg = modal.querySelector('img');
+      const closeBtn = modal.querySelector('.image-zoom-close');
+
+      // Add zoom icon and click handler to all images in prose
+      const images = document.querySelectorAll('.prose img');
+      images.forEach((img) => {
+        // Skip if already has zoom wrapper
+        if (img.parentElement?.classList.contains('image-zoom-wrapper')) return;
+
+        // Create wrapper for positioning
+        const wrapper = document.createElement('div');
+        wrapper.className = 'image-zoom-wrapper';
+        wrapper.style.position = 'relative';
+        wrapper.style.display = 'inline-block';
+        img.parentNode?.insertBefore(wrapper, img);
+        wrapper.appendChild(img);
+
+        // Create zoom icon
+        const zoomIcon = document.createElement('div');
+        zoomIcon.className = 'image-zoom-icon';
+        zoomIcon.innerHTML = `
+          <svg fill="none" stroke="white" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+          </svg>
+        `;
+        wrapper.appendChild(zoomIcon);
+
+        // Click handler
+        img.addEventListener('click', (e) => {
+          e.preventDefault();
+          const imageElement = img as HTMLImageElement;
+          modalImg.src = imageElement.src;
+          modalImg.alt = imageElement.alt || 'Zoomed image';
+          modal.classList.add('active');
+          document.body.style.overflow = 'hidden';
+        });
+      });
+
+      // Close modal handlers
+      const closeModal = () => {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+      };
+
+      closeBtn.addEventListener('click', closeModal);
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          closeModal();
+        }
+      });
+
+      // Close on Escape key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+          closeModal();
+        }
+      });
+    }
+    
+    // Initialize when DOM is ready
+    function init() {
+      formatJSONCodeBlocks();
+      initTableOfContents();
+      initCodeBlockExpansion();
+      initImageZoom();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  </script>
 </Layout>
