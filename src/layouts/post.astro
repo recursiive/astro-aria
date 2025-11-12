@@ -81,7 +81,7 @@ const { frontmatter } = Astro.props;
     </div>
   </main>
 
-  <script>
+  <script is:inline>
     function formatJSONCodeBlocks() {
       const codeBlocks = document.querySelectorAll('.prose pre code[class*="language-json"]');
       
@@ -259,7 +259,7 @@ const { frontmatter } = Astro.props;
       // Get the current pathname
       const pathname = window.location.pathname;
       
-      // Format the path: /post/meerkat -> ~/recursiion/post/meerkat
+      // Format the path: /post/meerkat -> ~/recursiive/post/meerkat
       // Remove leading slash and format
       const formattedPath = pathname
         .replace(/^\/+/, '') // Remove leading slashes
@@ -267,7 +267,7 @@ const { frontmatter } = Astro.props;
         .filter(Boolean) // Remove empty strings
         .join('/');
       
-      const displayPath = formattedPath ? `~/recursiion/${formattedPath}` : '~/recursiion';
+      const displayPath = formattedPath ? `~/recursiive/${formattedPath}` : '~/recursiive';
       
       urlPathElement.textContent = displayPath;
     }
