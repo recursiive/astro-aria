@@ -55,10 +55,12 @@ const allPosts = await getCollection("post");
                 id="sort-dropdown"
                 class="px-4 py-2 rounded-lg border border-blue-400/30 glass-card backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-blue-400/50 cursor-pointer"
               >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-                <option value="title-asc">Title (A-Z)</option>
-                <option value="title-desc">Title (Z-A)</option>
+                <option value="newest">Date: Newest First</option>
+                <option value="oldest">Date: Oldest First</option>
+                <option value="views-high">Views: High to Low</option>
+                <option value="views-low">Views: Low to High</option>
+                <option value="title-asc">Title: A to Z</option>
+                <option value="title-desc">Title: Z to A</option>
               </select>
             </div>
             
@@ -100,6 +102,43 @@ const allPosts = await getCollection("post");
     const resultsCount = document.getElementById('results-count') as HTMLElement;
     
     let allPosts = Array.from(postsGrid.children) as HTMLElement[];
+    let viewCountsLoaded = false;
+
+    // Fetch view counts for all posts
+    async function loadViewCounts() {
+      if (viewCountsLoaded) return;
+      
+      const slugs = allPosts.map(post => {
+        return post.getAttribute('data-slug') || '';
+      }).filter(slug => slug);
+
+      // Fetch view counts for all posts in parallel
+      const viewCountPromises = slugs.map(async (slug) => {
+        try {
+          const response = await fetch(`/api/track-view?slug=${encodeURIComponent(slug)}`);
+          const data = await response.json();
+          return { slug, views: data.views || 0 };
+        } catch (error) {
+          return { slug, views: 0 };
+        }
+      });
+
+      const viewCounts = await Promise.all(viewCountPromises);
+      
+      // Store view counts in data attributes
+      allPosts.forEach((post: HTMLElement) => {
+        const slug = post.getAttribute('data-slug') || '';
+        const viewData = viewCounts.find(vc => vc.slug === slug);
+        post.setAttribute('data-views', (viewData?.views || 0).toString());
+      });
+
+      viewCountsLoaded = true;
+      
+      // Re-sort if currently sorting by views
+      if (sortDropdown.value === 'views-high' || sortDropdown.value === 'views-low') {
+        applyFiltersAndSort();
+      }
+    }
 
     // Search functionality
     searchInput.addEventListener('input', () => {
@@ -108,7 +147,11 @@ const allPosts = await getCollection("post");
 
     // Sort functionality
     sortDropdown.addEventListener('change', () => {
-      applyFiltersAndSort();
+      if ((sortDropdown.value === 'views-high' || sortDropdown.value === 'views-low') && !viewCountsLoaded) {
+        loadViewCounts();
+      } else {
+        applyFiltersAndSort();
+      }
     });
 
     function applyFiltersAndSort() {
@@ -136,8 +179,6 @@ const allPosts = await getCollection("post");
       });
 
       // Then, sort visible posts
-      const allPostsArray = Array.from(allPosts);
-      
       if (sortOption === 'oldest') {
         // Reverse the array for oldest first
         visiblePosts.reverse();
@@ -150,6 +191,14 @@ const allPosts = await getCollection("post");
             case 'newest':
               // Keep original order (newest first)
               return 0;
+            case 'views-high':
+              const viewsA = parseInt(a.getAttribute('data-views') || '0', 10);
+              const viewsB = parseInt(b.getAttribute('data-views') || '0', 10);
+              return viewsB - viewsA; // Descending order (highest first)
+            case 'views-low':
+              const viewsALow = parseInt(a.getAttribute('data-views') || '0', 10);
+              const viewsBLow = parseInt(b.getAttribute('data-views') || '0', 10);
+              return viewsALow - viewsBLow; // Ascending order (lowest first)
             case 'title-asc':
               return titleA.localeCompare(titleB);
             case 'title-desc':
@@ -171,5 +220,8 @@ const allPosts = await getCollection("post");
 
     // Initialize results count
     resultsCount.textContent = allPosts.length.toString();
+    
+    // Preload view counts in the background
+    loadViewCounts();
   </script>
 </Layout>

@@ -44,6 +44,25 @@ const { frontmatter } = Astro.props;
                   Published on {frontmatter.dateFormatted}
                 </p>
               )}
+              <span id="read-time" class="inline-flex items-center gap-1.5 text-sm text-neutral-500 dark:text-neutral-400">
+                <svg 
+                  class="w-4 h-4 text-neutral-400 dark:text-neutral-500 flex-shrink-0" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path 
+                    stroke-linecap="round" 
+                    stroke-linejoin="round" 
+                    stroke-width="2" 
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" 
+                  />
+                </svg>
+                <span id="read-time-text" class="tabular-nums">
+                  {/* Read time will be calculated */}
+                </span>
+              </span>
               <span id="view-count" class="inline-flex items-center gap-1.5 text-sm text-neutral-500 dark:text-neutral-400 hidden">
                 <svg 
                   id="view-count-icon"
@@ -304,6 +323,35 @@ const { frontmatter } = Astro.props;
       const isProduction = window.location.hostname !== 'localhost' && 
                           window.location.hostname !== '127.0.0.1';
       
+      // Calculate reading time from article content
+      function calculateReadTime() {
+        const article = document.querySelector('article.prose') || document.querySelector('article');
+        if (!article) return 0;
+        
+        // Get text content, excluding code blocks and pre elements
+        const text = article.innerText || article.textContent || '';
+        
+        // Remove extra whitespace and split into words
+        const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+        const wordCount = words.length;
+        
+        // Average reading speed: 200 words per minute
+        const minutes = Math.ceil(wordCount / 200);
+        return Math.max(1, minutes); // At least 1 minute
+      }
+      
+      // Update read time display
+      function updateReadTime() {
+        const readTimeText = document.getElementById('read-time-text');
+        const readTimeContainer = document.getElementById('read-time');
+        
+        if (readTimeText && readTimeContainer) {
+          const minutes = calculateReadTime();
+          readTimeText.textContent = `${minutes} min read`;
+          readTimeContainer.style.display = 'inline-flex';
+        }
+      }
+      
       // Helper function to update view count display
       function updateViewCount(views) {
         const viewCountText = document.getElementById('view-count-text');
@@ -321,6 +369,13 @@ const { frontmatter } = Astro.props;
           viewCountContainer.classList.add('hidden');
           viewCountContainer.style.display = 'none';
         }
+      }
+      
+      // Calculate and display read time
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', updateReadTime);
+      } else {
+        updateReadTime();
       }
       
       // Load initial view count (works in both dev and production)

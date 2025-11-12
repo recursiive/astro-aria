@@ -60,6 +60,7 @@ const postsLoop = sortedPosts.slice(0, count).map((post) => {
         onclick={`location.href = '${post.link}'`}
         data-title={post.title}
         data-description={post.description}
+        data-slug={post.slug}
         data-topics={post.topics.join(', ')}
         data-technologies={(post.technologies || []).join(', ')}
       >
