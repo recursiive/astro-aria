@@ -196,13 +196,17 @@ code, pre, .code, .mono {
   border-radius: 12px;
   padding: 0;
   margin: 1.5em 0;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: 
     0 4px 16px rgba(0, 0, 0, 0.3),
     0 0 0 1px rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  max-height: 400px;
   transition: max-height 0.3s ease;
+}
+
+/* Only apply max-height to code blocks that need expansion */
+.prose pre.needs-expansion {
+  max-height: 400px;
 }
 
 .prose pre.expanded {
@@ -210,8 +214,15 @@ code, pre, .code, .mono {
   overflow: visible;
 }
 
-.prose pre:not(.expanded) {
+/* Only apply overflow hidden to code blocks that need expansion */
+.prose pre.needs-expansion:not(.expanded) {
   overflow: hidden;
+}
+
+/* Ensure non-expanded code blocks show all content with proper padding */
+.prose pre:not(.needs-expansion) {
+  overflow: visible;
+  max-height: none;
 }
 
 .dark .prose pre {
@@ -257,6 +268,7 @@ code, pre, .code, .mono {
   background-color: transparent;
   color: #d4d4d4;
   padding: 1.25em 1.5em;
+  padding-bottom: 1.5em; /* Ensure last line has enough space */
   border-radius: 0;
   border: none;
   font-size: 0.875em;

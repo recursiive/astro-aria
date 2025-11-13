@@ -156,6 +156,9 @@ const { frontmatter } = Astro.props;
         const scrollHeight = code.scrollHeight;
         
         if (scrollHeight > maxHeight) {
+          // Mark this code block as needing expansion
+          pre.classList.add('needs-expansion');
+          
           // Create expand button
           const expandBtn = document.createElement('button');
           expandBtn.className = 'code-expand-btn';
