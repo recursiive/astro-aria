@@ -125,11 +125,19 @@ const allPosts = await getCollection("post");
 
       const viewCounts = await Promise.all(viewCountPromises);
       
-      // Store view counts in data attributes
+      // Store view counts in data attributes and update display
       allPosts.forEach((post: HTMLElement) => {
         const slug = post.getAttribute('data-slug') || '';
         const viewData = viewCounts.find(vc => vc.slug === slug);
-        post.setAttribute('data-views', (viewData?.views || 0).toString());
+        const views = viewData?.views || 0;
+        post.setAttribute('data-views', views.toString());
+        
+        // Update view count display
+        const viewCountElement = post.querySelector('.view-count-text');
+        if (viewCountElement) {
+          const formattedViews = views > 0 ? views.toLocaleString() : '0';
+          viewCountElement.textContent = formattedViews;
+        }
       });
 
       viewCountsLoaded = true;
