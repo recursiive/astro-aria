@@ -26,7 +26,14 @@ export const siteConfig = {
   ],
   projects: [
     {
-      name: "Cloud-Based SIEM Home Lab",
+      name: "Home Lab",
+      description:
+      "Provisioned a Proxmox virtualization environment to deploy an enterprise infrastructure consisting of Windows Server 2022 Active Directory domain services and Windows 11 domain-joined endpoints. Implemented Wazuh SIEM and XDR platform for centralized security monitoring, log aggregation, and threat detection with custom correlation rules for enhanced visibility into network traffic and endpoint behavior.",
+      link: "/post/homelab",
+      skills: ["Proxmox", "Windows", "Linux", "Active Directory", "Wazuh"],
+    },
+    {
+      name: "Cloud-Based SIEM Lab",
       description:
         "Built a cloud-based SIEM/SOC lab using Azure and Microsoft Sentinel. Deployed a public-facing Windows VM to capture real-world attack logs, recorded 90,000+ failed authentication attempts in 12 hours, and performed threat hunting using KQL queries and geolocation data.",
       link: "/post/soclab",
