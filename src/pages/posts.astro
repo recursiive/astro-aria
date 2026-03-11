@@ -52,8 +52,8 @@ const allPosts = await getCollection("post");
                 Sort by:
               </span>
               <select
-                id="sort-dropdown"
-                class="px-4 py-2 rounded-lg border border-neutral-300 dark:border-blue-400/30 glass-card backdrop-blur-md text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-neutral-400 dark:hover:border-blue-400/50 cursor-pointer"
+              id="sort-dropdown"
+              class="px-4 py-2 rounded-lg border border-neutral-300 dark:border-blue-400/30 bg-white dark:bg-slate-900 text-neutral-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-neutral-400 dark:hover:border-blue-400/50 cursor-pointer"
               >
                 <option value="newest">Date: Newest First</option>
                 <option value="oldest">Date: Oldest First</option>
@@ -85,24 +85,24 @@ const allPosts = await getCollection("post");
   </main>
 
   <style>
-    select {
-      background-color: #fff !important;
-      color: #1e293b;
+    #sort-dropdown {
+      background-color: #ffffff;
+      color: #111827;
     }
     
-    .dark select {
-      background-color: rgba(255, 255, 255, 0.05) !important;
-      color: #fff;
+    .dark #sort-dropdown {
+      background-color: #020617;
+      color: #e5e7eb;
     }
     
-    select option {
-      background-color: #fff;
-      color: #1e293b;
+    #sort-dropdown option {
+      background-color: #ffffff;
+      color: #111827;
     }
     
-    .dark select option {
-      background-color: #1f2937;
-      color: #fff;
+    .dark #sort-dropdown option {
+      background-color: #020617;
+      color: #e5e7eb;
     }
   </style>
 
