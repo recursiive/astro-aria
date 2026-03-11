@@ -6,7 +6,7 @@ export const siteConfig = {
   social: {
     email: "ryanahunt@proton.me",
     linkedin: "https://linkedin.com/in/ryananthunt",
-    twitter: "https://x.com/recusiive",
+    twitter: "https://x.com/temp1fyy",
     github: "https://github.com/recursiive",
     cyberdefenders: "https://cyberdefenders.org/p/recursiive",
     tryhackme: "https://tryhackme.com/p/recusiive"
