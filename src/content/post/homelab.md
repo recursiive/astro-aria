@@ -1,196 +1,85 @@
 ---
 layout: ../../layouts/post.astro
-title: Homelab Setup & Progress
+title: Current State of my Homelab
 description: A in-depth writeup of setting up my homelab.
-dateFormatted: Oct 22, 2025
+dateFormatted: March 10th, 2026
 topic: ["Homelab", "Active Directory"]
 technologies: ["Proxmox", "Linux", "Windows"]
 tags: ["Homelab", "Infrastructure", "Virtualization", "Docker"]
 hidden: false
 ---
 
-Super stoked to finally get my hands on some hardware to get my homelab up and running.
+![Homelab](/assets/images/posts/homelab.png)
 
-My overall goal for this homelab is to have a domain supporting 1-2 user machines, with security logs forwarding to an open-source SIEM like [Security Onion](https://securityonionsolutions.com/) and configure the ELK stack (Elastic, Logstash, Kibana).
+# Introduction
 
-Using a Kali virtual machine attack and exploit vulnerabilities present on the user machines.
+Collectively since October of 2025, I've been getting my hands on some hardware to build up my homelab. I've been able to obtain a Dell Optiplex 3050 SFF, Cisco SG300 switch, Dell Poweredge R620, and a Lenovo Thinkserver RD640 which sadly died on my shortly after purchasing it. 
 
-There is so much oppourtunity for learning and messing around with different tools and hardware to expand this homelab, so I am excited to get started.
+The goal of my homelab is to simulate a mock enterprise environment to simulate blue and red team activity, practice networking, while hosting some quality of life services that I can use on the daily. 
 
+## Future Plans
+- [x] Deploy Wazuh SIEM and XDR agents on all endpoints
+- [ ] Implement VLANs for services, DC, endpoints
+- [ ] Enable port security on SG300
+- [ ] Deploy [pfSense](https://www.pfsense.org/) for firewall and routing outside of ISP modem
+- [ ] Tune and customize alert detections in Wazuh based off my environment
+- [ ] Implement GPOs to mock an enterprise environment
 
+## Network Diagram
 
-### Covered in this post
-- [x] Set up Proxmox hypervisor
-- [x] Set up Docker instance running Debian 13 for Teslamate Web Server using Proxmox hypervisor
-- [x] Setup `hunt.local` domain through Windows Server 2022
-- [x] Setup domain joined Windows 10 workstation
-- [ ] Caffeine Intake 
+![Network Diagram](/assets/images/posts/networkdiagram.png)
 
-![setup](https://i.imgur.com/Qd6Sii9.png)
+## Hardware, VMs, Services
 
-### Current Hardware
-- Optiplex 3050
-- Fortinet Fortigate 60D Firewall
-- Netgear Nighthawk Router
+### Cisco SG300
 
+I recently obtained a Cisco SG300 in an effort to grow the homelab to mock an enterprise environment for best learning. The switch waill also help me practice networking and switching commands as I study for the CCNA. As of right now, I intend to set up VLANs for the Windows DC, Windows endpoints, and different services (i.e., teslamate).
 
-### Proxmox VE Install
+### Dell Poweredge R620 / Proxmox VE Hypervisor
 
-Through Rufus, I flashed [Proxmox VE](https://www.proxmox.com/en/products/proxmox-virtual-environment/overview) onto a USB and installed it on the Optiplex 3050, and installed docker on the machine.
+![Proxmox VE](/assets/images/posts/proxmox_ve2.png)
 
+The absolute bread and butter of my homelab, I was able to snag this Dell Poweredge R620 with 160GB RAM, 2x Xeon E5-2640 v2 CPUs, and 3x 5TB HDD. 
 
-### Setting up Windows Server 2022 as my Domain Controller
+I deployed [Proxmox Virtual Environment (VE) 9.1](https://www.proxmox.com/en/products/proxmox-virtual-environment/overview) as my T1 Hypervisor. Within Proxmox, I deployed a LXC for self-hosting a minecraft server which rarely gets used, but why not? A Debian 12 VM for hosting [Teslamate](https://github.com/teslamate-org/teslamate), a self-hosted data logger via the Tesla API. Additionally, I've deployed Windows Server 2022 as a Domain Controller (homelab.local), which supports 1 Windows 10 endpoint (vulnerable). Lastly, a Kali Linux VM for practicing penetration testing/red teaming. Lastly, I deployed [Wazuh](https://wazuh.com/), an open source SIEM and XDR solution.
 
+### mc-homelab.local
 
-After downloading the Windows Server 2022 .iso file from Microsoft, I uploaded it to my main node in Proxmox and then created a new VM with the following configurations:
+The Linux Container (LXC), supports a self-hosted minecraft server, averaging a daily 0 player count. To avoid port forwarding on my home network, I utilized a service called [Minekube Connect](https://connect.minekube.com/), functioning as a managed, cloud-based proxy network which allows me to serve a secure connection, without exposing my public IP, while also providing anti-DDoS protections.
 
-![DC-config](https://i.imgur.com/PottE2d.png)
+I really just host this incase myself or any of my friends want to play on a server for us with 24/7 uptime to avoid purchasing a [Realm](https://www.minecraft.net/en-us/realms).
 
-Through the Control Panel and IPv4 network properties, I configured a static IP for my domain controller.
+![Minecraft Server](/assets/images/posts/mcserver.png)
 
-![static](https://i.imgur.com/huVHzvG.png)
+### teslamateprd1.homelab.local
 
-I also renamed the computer to the common Domain Controller naming convention (XXXX-SAN-DC01).
+Teslamate, supported by a Debian 12 VM, is deployed through a Docker container, with a PostgresDB, which hosts the teslamate instance, and the main Grafana data visualizations. Teslamate provides a ton of analytics all passed through the Tesla API, which honestly provides more analytics and insight to your car than you need, but it is helpful for tracking the battery efficiency and degradation.
 
-### Promoting to Domain Controller
+![Teslamate Grafana](/assets/images/posts/teslamate-grafana.png)
 
-Promoting to Domain Controller ran me through me through the configuration of AD, allowing me to install additional features such as DHCP, DNS Servers, and set up my domain name.
+### lab-dcprd1.homelab.local
 
-### Installing Domain-Joined Windows 10 VM
+*lab-dcprd1* functions as the domain controller for `homelab.local`, supporting 1 windows endpoint (corp-f34), in which I utilized [vulnerable AD](https://github.com/safebuffer/vulnerable-AD) to purposefully deploy a vulnerable Active Directory environment for red teaming purposes. I have future plans to reset the Active Directory environment, and create automations for creating users, assinging/creating GPOs, etc.
 
-![win10](https://i.imgur.com/FA9cUwS.png)
+![dcprd1](/assets/images/posts/dcprd1.png)
 
-Installing the Windows 10 VM in Proxmox under my main node was pretty straightforward, loading the Windows10.iso into storage and adding an additional CD/DVD drive for VirtIO drivers. 
+### lab-wazuhprd1.homelab.local
 
-Now that this virtual machine is up and running, it needs to be joined the `hunt.local` domain.
+In an effort to get more hands on with SIEM and XDR tools, I deployed an open-source SIEM and XDR solution called [Wazuh](https://wazuh.com). Currently I have the Wazuh XDR agent sitting on all endpoints and applicable VMs, with Sysmon telemetry ingesting into Wazuh. I have future plans to practice creating custom detections in my environment, while also tuning some alerts to avoid false-positives such as alerting on processes like Medal, Steam, which I have installed on my main computer.
 
-In order to do so, I need to point ```XXXX-LABVM-XXX```'s DNS settings to the Domain Controller IP, so through Control Panel -> Network and Internet -> Network and Sharing Center -> Change Adapter Settings -> then right click properties on Ethrenet -> IPv4 Properties. 
+This is the Wazuh dashboard, overviewing the amount of alerts in the last 24 hours. 
 
-![ipv4](https://i.imgur.com/NPiW6yz.png)
+![Wazuh Dashboard](/assets/images/posts/wazuh1.png)
 
-Pointing the `Preferred DNS Server: 10.0.0.XXX` to the DC's IP.
+This is the Explore/Threat Hunting section of Wazuh, visualizing ingested logs and providing alert information.
 
-Once the DNS and static IP was configured, I added the workstation to Active Directory via `sysdm.cpl` -> Change Computer Name, and entered the desired workstation name and domain name.
+![Wazuh Explore](/assets/images/posts/wazuh2.png)
 
-After a reboot of the workstation, the workstation appeared in my Active Directory workstation tree, and navigating to users, I can begin creating domain users. I created two users `user` and `admin`.
+![Wazuh Threat Hunt](/assets/images/posts/wazuh3.png)
 
-![DOMAIN](https://i.imgur.com/uy3QFzF.png)
+I do have future plans to migrate away from the Wazuh log visualization side of things, and implement the ELK Stack (Elasticsearch, Kibana, Logstash) to provide better visualization into log telemetry. Additionally, I'd like to explore the Elastic agent and see what it can offer alongside the Wazuh XDR agent.
 
-*I think its fair to note in this process, I forgot my root password for Promox and had to find out how to reset root password through the boot parameters.* 🥲
+## Closing Thoughts & Future Plans
 
-------------------------------------------------
-
-### Deploying a Debian Instance for [Teslamate](https://github.com/teslamate-org/teslamate)
-
-Shifting out of the Windows environment, and to give a little bit of background on [Teslamate](https://github.com/teslamate-org/teslamate), I've always wanted to set up Teslamate, but never felt like running it on my main computer since it needs to be running 24/7/365 to collect data. Teslamate is a self-hosted data logger for Tesla vehicles, and provides metrics and insights into drive efficiency, overview, trips, battery health, etc. Every metric into the car you could think of, is more than likely readily available through Teslamate in a nice dashboard view. Since I was able to set up a server intended to be running 24/7, this was the perfect oppourtunity to set this up.
-
-
-Under my proxmox domain, I deployed a Debian 13 VM and began the [Teslamate](https://github.com/teslamate-org/teslamate) install process which was setting up the docker .yml file for two web services on port 3000 and 4000 for teslamate. 
-
-```yml
-services:
-  teslamate:
-    image: teslamate/teslamate:latest
-    restart: always
-    environment:
-      - ENCRYPTION_KEY=secretkey #replace with a secure key to encrypt your Tesla API tokens
-      - DATABASE_USER=teslamate
-      - DATABASE_PASS=password #insert your secure database password!
-      - DATABASE_NAME=teslamate
-      - DATABASE_HOST=database
-      - MQTT_HOST=mosquitto
-    ports:
-      - 4000:4000
-    volumes:
-      - ./import:/opt/app/import
-    cap_drop:
-      - all
-
-  database:
-    image: postgres:17-trixie
-    restart: always
-    environment:
-      - POSTGRES_USER=teslamate
-      - POSTGRES_PASSWORD=password #insert your secure database password!
-      - POSTGRES_DB=teslamate
-    volumes:
-      - teslamate-db:/var/lib/postgresql/data
-
-  grafana:
-    image: teslamate/grafana:latest
-    restart: always
-    environment:
-      - DATABASE_USER=teslamate
-      - DATABASE_PASS=password #insert your secure database password!
-      - DATABASE_NAME=teslamate
-      - DATABASE_HOST=database
-    ports:
-      - 3000:3000
-    volumes:
-      - teslamate-grafana-data:/var/lib/grafana
-
-  mosquitto:
-    image: eclipse-mosquitto:2
-    restart: always
-    command: mosquitto -c /mosquitto-no-auth.conf
-    # ports:
-    #   - 1883:1883
-    volumes:
-      - mosquitto-conf:/mosquitto/config
-      - mosquitto-data:/mosquitto/data
-
-volumes:
-  teslamate-db:
-  teslamate-grafana-data:
-  mosquitto-conf:
-  mosquitto-data:
-  ```
-
-To configure the .yml, I set up a secure encryption key, as well as a secure database password to log the teslamate data. 
-
-Heres a nice overview of Grafana logging the data for my Tesla.
-
-![grafana](https://i.imgur.com/YWAinJV.png)
-
-In order to ensure that this teslamate service is always configured to run at boot, I created a startup file at `/etc/systemd/system/` to bring the docker service up on boot.
-
-```bash
-[Unit]
-Description=TeslaMate Docker Compose Stack
-After=network-online.target docker.service
-Requires=docker.service
-Wants=network-online.target
-
-[Service]
-Type=oneshot
-User=teslamate
-WorkingDirectory=/opt/teslamate
-ExecStart=/usr/bin/docker compose up -d
-ExecStop=/usr/bin/docker compose down
-RemainAfterExit=yes
-Restart=on-failure
-RestartSec=10s
-
-[Install]
-WantedBy=multi-user.target
-```
-
-After rebooting, I confirmed it starts the web servers on boot.
-
-### Current Load
-
-![overview](https://i.imgur.com/LfAads4.png)
-
-Currently, were looking tight on resources with 3 VM's running, I will definitely need to upgrade the Optiplex 3050 or look at some different machines for host usage.
-
-### Next Steps
-- [ ] Implement Wazuh & ELK Stack for Open-Source SIEM & XDR.
-- [ ] Configure Fortinet Fortigate 60D firewall.
-- [ ] Research proxying & file servers
-
-At the current time, I'm under a standstill, I'm looking to get my hands on some more RAM to increase the memory for my Optiplex Micro 3050. Currently with 8GB, we can run 3VM's (2 of them being pretty heavy due to Windows).
-
-Im thinking grabbing two 2x16GB (32GB) DDR4 SODIMM RAM, which should free up the RAM bottleneck.
-
-I'm also considering adding another node, solely for the heavy Windows VM's (DC, W10), and having the 2nd node to deploy other services, which would require me to set up a [cluster](https://pve.proxmox.com/wiki/Cluster_Manager).
+I've really enjoyed learning through this homelab, and I'm really excited to start practicing networking and start segmenting my home network. I'd really like to start diving deep into Active Directory, networking, and pfSense as mentioned in my future plans. pfSense will be a great project and great addition to securing my home network rather than relying on the generic ISP modem. 
 
