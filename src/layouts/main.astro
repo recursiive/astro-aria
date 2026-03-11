@@ -62,9 +62,16 @@ const {
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/favicon.png" />
 
-    <!-- Force dark mode -->
+    <!-- Theme: apply saved preference or system preference before paint -->
     <script is:inline>
-      document.documentElement.classList.add('dark');
+      (function() {
+        var stored = localStorage.getItem('theme');
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var dark = (stored === 'dark' || (stored !== 'light' && prefersDark));
+        document.documentElement.classList.toggle('dark', dark);
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', dark ? '#0a0e17' : '#f0f4f8');
+      })();
     </script>
 
     <style>

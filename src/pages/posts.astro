@@ -13,10 +13,10 @@ const allPosts = await getCollection("post");
   <main class="min-h-screen flex flex-col">
     <section class="relative z-20 max-w-6xl mx-auto my-12 px-7 lg:px-0 flex-1">
       <div class="text-center mb-12">
-        <h1 class="text-4xl md:text-5xl font-bold text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.8)] dark:drop-shadow-[0_0_12px_rgba(255,255,255,0.8)] typing-animation">
+        <h1 class="text-4xl md:text-5xl font-bold text-neutral-900 dark:text-white drop-shadow-[0_0_12px_rgba(0,0,0,0.15)] dark:drop-shadow-[0_0_12px_rgba(255,255,255,0.8)] typing-animation">
           Blog Posts
         </h1>
-        <p class="text-lg md:text-xl text-neutral-300 dark:text-neutral-400 mt-4 animate-fadeIn" style="animation-delay: 3s;">
+        <p class="text-lg md:text-xl text-neutral-600 dark:text-neutral-400 mt-4 animate-fadeIn" style="animation-delay: 3s;">
           a deep dive into my learning journey
         </p>
       </div>
@@ -27,7 +27,7 @@ const allPosts = await getCollection("post");
         <div class="glass-card liquid-glass rounded-2xl p-4 backdrop-blur-md">
           <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg class="h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="h-5 w-5 text-neutral-500 dark:text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
@@ -35,7 +35,7 @@ const allPosts = await getCollection("post");
               type="text"
               id="post-search"
               placeholder="Search posts by title or description..."
-              class="block w-full pl-10 pr-3 py-2 border border-blue-400/30 rounded-lg bg-white/5 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              class="block w-full pl-10 pr-3 py-2 border border-neutral-300 dark:border-blue-400/30 rounded-lg bg-white dark:bg-white/5 text-neutral-900 dark:text-white placeholder-neutral-500 dark:placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
         </div>
@@ -45,7 +45,7 @@ const allPosts = await getCollection("post");
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <!-- Sort Dropdown -->
             <div class="flex items-center gap-3">
-              <span class="text-sm font-medium text-neutral-300 flex items-center gap-2">
+              <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-2">
                 <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
                 </svg>
@@ -53,7 +53,7 @@ const allPosts = await getCollection("post");
               </span>
               <select
                 id="sort-dropdown"
-                class="px-4 py-2 rounded-lg border border-blue-400/30 glass-card backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-blue-400/50 cursor-pointer"
+                class="px-4 py-2 rounded-lg border border-neutral-300 dark:border-blue-400/30 glass-card backdrop-blur-md text-neutral-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-neutral-400 dark:hover:border-blue-400/50 cursor-pointer"
               >
                 <option value="newest">Date: Newest First</option>
                 <option value="oldest">Date: Oldest First</option>
@@ -69,8 +69,8 @@ const allPosts = await getCollection("post");
               <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              <span class="text-sm text-neutral-300">
-                Showing <span id="results-count" class="font-semibold text-blue-400"></span> posts
+              <span class="text-sm text-neutral-700 dark:text-neutral-300">
+                Showing <span id="results-count" class="font-semibold text-blue-600 dark:text-blue-400"></span> posts
               </span>
             </div>
           </div>
@@ -86,12 +86,23 @@ const allPosts = await getCollection("post");
 
   <style>
     select {
+      background-color: #fff !important;
+      color: #1e293b;
+    }
+    
+    .dark select {
       background-color: rgba(255, 255, 255, 0.05) !important;
+      color: #fff;
     }
     
     select option {
-      background-color: #1f2937 !important;
-      color: white;
+      background-color: #fff;
+      color: #1e293b;
+    }
+    
+    .dark select option {
+      background-color: #1f2937;
+      color: #fff;
     }
   </style>
 

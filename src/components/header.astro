@@ -1,6 +1,7 @@
 ---
 import menus from "../collections/menu.json";
 import Logo from "../components/logo.astro";
+import ThemeToggle from "../components/theme-toggle.astro";
 ---
 
 <!-- This is an invisible div with relative position so that it takes up the height of the menu (because menu is absolute/fixed) -->
@@ -52,14 +53,15 @@ import Logo from "../components/logo.astro";
       <!-- Desktop Menu -->
       <div
         id="desktopMenu"
-        class="hidden sm:flex sm:flex-row sm:text-base sm:h-auto sm:text-sm sm:w-auto sm:pr-0 sm:pt-0"
+        class="hidden sm:flex sm:flex-row sm:items-center sm:gap-2 sm:text-base sm:h-auto sm:text-sm sm:w-auto sm:pr-0 sm:pt-0"
       >
+        <ThemeToggle />
         {
           menus.map((menu) => {
             return (
               <a
                 href={menu.url}
-                class="relative flex items-center justify-center px-3 py-0 font-medium tracking-wide text-center duration-200 ease-out hover:text-white"
+                class="relative flex items-center justify-center px-3 py-0 font-medium tracking-wide text-center duration-200 ease-out hover:text-white dark:hover:text-white text-neutral-700 dark:text-neutral-400"
               >
                 {menu.name}
               </a>
@@ -77,12 +79,16 @@ import Logo from "../components/logo.astro";
   class="fixed top-[75px] left-0 w-full z-40 flex-col items-end justify-start hidden text-sm ease-out duration-300"
 >
   <div class="w-full px-4 py-6 glass-card liquid-glass rounded-b-2xl">
+    <div class="flex items-center justify-between pb-3 mb-3 border-b border-neutral-200 dark:border-neutral-700">
+      <span class="text-xs font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Theme</span>
+      <ThemeToggle />
+    </div>
     {
       menus.map((menu) => {
         return (
           <a
             href={menu.url}
-            class="relative flex items-center justify-center w-full px-3 py-3 font-medium tracking-wide text-center duration-200 ease-out hover:text-white border-b border-neutral-700 last:border-b-0"
+            class="relative flex items-center justify-center w-full px-3 py-3 font-medium tracking-wide text-center duration-200 ease-out hover:text-white border-b border-neutral-200 dark:border-neutral-700 last:border-b-0 text-neutral-700 dark:text-neutral-400"
           >
             {menu.name}
           </a>

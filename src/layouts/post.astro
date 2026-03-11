@@ -5,19 +5,11 @@ const { frontmatter } = Astro.props;
 
 <Layout title={frontmatter.title}>
   <main
-    class="relative z-30 max-w-4xl pb-1 mx-auto mt-10 bg-white dark:bg-neutral-950 md:rounded-t-md text-neutral-900"
+    class="post-layout relative z-30 max-w-4xl pb-1 mx-auto mt-10 md:rounded-2xl text-neutral-900 dark:text-neutral-100 overflow-hidden"
   >
     <div
-      class="relative flex flex-col px-5 pt-6 border-t border-b-0 md:border-r md:border-l md:pt-20 lg:px-0 justify-stretch md:rounded-t-2xl border-neutral-200 dark:border-neutral-800"
+      class="post-layout__inner relative flex flex-col px-5 pt-6 md:pt-20 lg:px-0 justify-stretch md:rounded-2xl"
     >
-      <div
-        class="absolute top-0 left-0 hidden w-px h-full mt-1 -translate-x-px md:block bg-gradient-to-b from-transparent to-white dark:to-neutral-950"
-      >
-      </div>
-      <div
-        class="absolute top-0 right-0 hidden w-px h-full mt-1 translate-x-px md:block bg-gradient-to-b from-transparent to-white dark:to-neutral-950"
-      >
-      </div>
       <div class="w-full max-w-2xl mx-auto">
         {/* Tags Section */}
         {frontmatter.tags && frontmatter.tags.length > 0 && (

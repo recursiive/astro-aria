@@ -1,6 +1,35 @@
 // Add your javascript here
 
-window.darkMode = true; // Always dark mode
+const THEME_KEY = "theme";
+
+function getStoredTheme() {
+	return localStorage.getItem(THEME_KEY);
+}
+
+function setStoredTheme(value) {
+	localStorage.setItem(THEME_KEY, value);
+}
+
+function isDark() {
+	return document.documentElement.classList.contains("dark");
+}
+
+function applyTheme(dark) {
+	if (dark) {
+		document.documentElement.classList.add("dark");
+		setStoredTheme("dark");
+	} else {
+		document.documentElement.classList.remove("dark");
+		setStoredTheme("light");
+	}
+	const meta = document.querySelector('meta[name="theme-color"]');
+	if (meta) meta.content = dark ? "#0a0e17" : "#f0f4f8";
+}
+
+window.darkMode = true; // Legacy: reflect current theme
+function updateDarkModeFlag() {
+	window.darkMode = isDark();
+}
 
 const stickyClasses = ["fixed", "h-14"];
 const unstickyClasses = ["absolute", "h-20"];
@@ -14,10 +43,16 @@ let headerElement = null;
 
 document.addEventListener("DOMContentLoaded", () => {
 	headerElement = document.getElementById("header");
-	
-	// Always show dark mode
-	showNight();
-	
+	updateDarkModeFlag();
+
+	document.querySelectorAll(".theme-toggle").forEach((btn) => {
+		btn.addEventListener("click", () => {
+			const dark = !isDark();
+			applyTheme(dark);
+			updateDarkModeFlag();
+		});
+	});
+
 	stickyHeaderFuncionality();
 	applyMenuItemClasses();
 	evaluateHeaderPosition();
@@ -50,13 +85,14 @@ window.evaluateHeaderPosition = () => {
 	}
 };
 
-// Always stay in dark mode - no toggle functionality needed
-function showDay(animate) {
-	// Do nothing - always stay in dark mode
+function showDay() {
+	applyTheme(false);
+	updateDarkModeFlag();
 }
 
-function showNight(animate) {
-	document.documentElement.classList.add("dark");
+function showNight() {
+	applyTheme(true);
+	updateDarkModeFlag();
 }
 
 window.applyMenuItemClasses = () => {

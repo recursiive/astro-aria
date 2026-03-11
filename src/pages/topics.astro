@@ -78,10 +78,10 @@ function getTopicSlug(topic) {
   <main class="min-h-screen flex flex-col">
     <section class="relative z-20 max-w-6xl mx-auto my-12 px-7 lg:px-0 flex-1">
       <div class="text-center mb-12">
-        <h1 class="text-4xl md:text-5xl font-bold text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.8)] dark:drop-shadow-[0_0_12px_rgba(255,255,255,0.8)] typing-animation">
+        <h1 class="text-4xl md:text-5xl font-bold text-neutral-900 dark:text-white drop-shadow-[0_0_12px_rgba(0,0,0,0.15)] dark:drop-shadow-[0_0_12px_rgba(255,255,255,0.8)] typing-animation">
           Topics
         </h1>
-        <p class="text-lg md:text-xl text-neutral-300 dark:text-neutral-400 mt-4 animate-fadeIn" style="animation-delay: 3s;">
+        <p class="text-lg md:text-xl text-neutral-600 dark:text-neutral-400 mt-4 animate-fadeIn" style="animation-delay: 3s;">
           explore posts organized by topic
         </p>
       </div>
@@ -91,7 +91,7 @@ function getTopicSlug(topic) {
         <!-- Search Input -->
         <div class="relative flex-1 w-full sm:max-w-md">
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg class="h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="h-5 w-5 text-neutral-500 dark:text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
@@ -99,14 +99,14 @@ function getTopicSlug(topic) {
             type="text"
             id="topic-search"
             placeholder="Search topics..."
-            class="block w-full pl-10 pr-3 py-2 border border-blue-400/30 rounded-lg bg-white/5 text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            class="block w-full pl-10 pr-3 py-2 border border-neutral-300 dark:border-blue-400/30 rounded-lg bg-white dark:bg-white/5 text-neutral-900 dark:text-white placeholder-neutral-500 dark:placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
 
         <!-- Sort Toggle -->
         <div class="flex items-center gap-3">
-          <span class="text-sm text-neutral-300">Sort by:</span>
-          <div class="flex bg-white/5 rounded-lg p-1 border border-blue-400/30">
+          <span class="text-sm text-neutral-700 dark:text-neutral-300">Sort by:</span>
+          <div class="flex bg-neutral-100 dark:bg-white/5 rounded-lg p-1 border border-neutral-300 dark:border-blue-400/30">
             <button
               id="sort-alphabetical"
               class="sort-btn px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 active"
@@ -180,12 +180,20 @@ function getTopicSlug(topic) {
 
   <style>
     .sort-btn {
-      color: #a3a3a3;
+      color: #94a3b8;
+    }
+    html:not(.dark) .sort-btn {
+      color: #64748b;
     }
     .sort-btn.active {
       background-color: rgba(59, 130, 246, 0.2);
       color: #60a5fa;
       border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+    html:not(.dark) .sort-btn.active {
+      color: #2563eb;
+      background-color: rgba(59, 130, 246, 0.15);
+      border-color: rgba(59, 130, 246, 0.4);
     }
   </style>
 
