@@ -174,8 +174,7 @@
   }
 
   function animate() {
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(0, 0, w, h);
+    ctx.clearRect(0, 0, w, h);
     
     const t = (frameCount / 80) * TIMESCALE;
     
@@ -199,7 +198,7 @@
       if (burstColor) {
         ctx.fillStyle = burstColor;
       } else {
-        ctx.fillStyle = `rgba(200, 200, 200, ${baseOpacity})`;
+        ctx.fillStyle = `rgba(148, 163, 184, ${baseOpacity * 0.9})`;
       }
       
       ctx.beginPath();

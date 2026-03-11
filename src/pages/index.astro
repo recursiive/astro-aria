@@ -1,35 +1,38 @@
 ---
-import PageHeading from "../components/page-heading.astro";
-import PostsLoop from "../components/posts-loop.astro";
 import Layout from "../layouts/main.astro";
-import About from "../components/portfolio/About.astro";
-import Projects from "../components/portfolio/Projects.astro";
-import Experience from "../components/portfolio/Experience.astro";
-import Education from "../components/portfolio/Education.astro";
+import FeaturedPosts from "../components/featured-posts.astro";
+import FeaturedProjects from "../components/featured-projects.astro";
 
 export const prerender = true;
 ---
 
 <Layout title="Ryan Hunt - Portfolio & Blog Website | Cybersecurity">
-  <main class="min-h-screen flex flex-col">
-    <section class="relative z-20 max-w-6xl mx-auto my-12 px-7 lg:px-0 flex-1">
-      <div class="glass-card liquid-glass rounded-2xl p-8 mb-12 text-center backdrop-blur-md border border-gray-700/50">
-        <h1 class="text-4xl md:text-5xl font-bold text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.8)] dark:drop-shadow-[0_0_12px_rgba(255,255,255,0.8)] typing-animation">
+  <main class="min-h-screen flex items-center justify-center px-4 py-12">
+    <div class="w-full max-w-4xl mx-auto">
+      <!-- Hero Section -->
+      <div class="text-center mb-16">
+        <h1 class="text-5xl md:text-6xl font-bold text-white mb-6 tracking-tight">
           Ryan Hunt
         </h1>
-        <p class="text-lg md:text-xl text-neutral-300 dark:text-neutral-400 mt-4 animate-fadeIn" style="animation-delay: 3s;">
-          Computer Science & Cybersecurity Student
-        </p>
         
-        <!-- Social Media Icons -->
-        <div class="flex flex-wrap justify-center gap-6 mt-8 animate-fadeIn" style="animation-delay: 4s;">
+        <!-- About Me Section (no title) -->
+        <div class="max-w-2xl mx-auto mb-12">
+          <p class="text-lg md:text-xl text-neutral-300 leading-relaxed">
+            passionate about cybersecurity, threat hunting, and security research.
+          </p>
+        </div>
+
+        <!-- Social Links -->
+        <div class="flex flex-wrap justify-center gap-4">
           <a
             href="https://x.com/recursiive"
             target="_blank"
-            class="glass-card liquid-glass rounded-xl p-3 text-gray-300 hover:text-white transition-all duration-200 backdrop-blur-md border border-gray-700/50 hover:border-gray-600/70 hover:scale-110"
+            rel="noopener noreferrer"
+            class="p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all duration-200 text-gray-300 hover:text-white"
+            aria-label="Twitter"
           >
             <svg
-              class="w-8 h-8"
+              class="w-6 h-6"
               viewBox="0 0 100 100"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -46,13 +49,14 @@ export const prerender = true;
           <a
             href="https://github.com/recursiive"
             target="_blank"
-            class="glass-card liquid-glass rounded-xl p-3 text-gray-300 hover:text-white transition-all duration-200 backdrop-blur-md border border-gray-700/50 hover:border-gray-600/70 hover:scale-110"
+            rel="noopener noreferrer"
+            class="p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all duration-200 text-gray-300 hover:text-white"
+            aria-label="GitHub"
           >
             <svg
-              class="w-8 h-8"
+              class="w-6 h-6"
               fill="currentColor"
               viewBox="0 0 24 24"
-              aria-hidden="true"
             >
               <path
                 fill-rule="evenodd"
@@ -65,10 +69,12 @@ export const prerender = true;
           <a
             href="https://tryhackme.com/p/recursiive"
             target="_blank"
-            class="glass-card liquid-glass rounded-xl p-3 text-gray-300 hover:text-white transition-all duration-200 backdrop-blur-md border border-gray-700/50 hover:border-gray-600/70 hover:scale-110"
+            rel="noopener noreferrer"
+            class="p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all duration-200 text-gray-300 hover:text-white"
+            aria-label="TryHackMe"
           >
             <svg
-              class="w-8 h-8"
+              class="w-6 h-6"
               role="img"
               viewBox="0 0 24 24"
               xmlns="http://www.w3.org/2000/svg"
@@ -83,10 +89,12 @@ export const prerender = true;
           <a
             href="https://cyberdefenders.org/profile/recursiive"
             target="_blank"
-            class="glass-card liquid-glass rounded-xl p-3 text-gray-300 hover:text-white transition-all duration-200 backdrop-blur-md border border-gray-700/50 hover:border-gray-600/70 hover:scale-110"
+            rel="noopener noreferrer"
+            class="p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all duration-200 text-gray-300 hover:text-white"
+            aria-label="CyberDefenders"
           >
             <svg
-              class="w-8 h-8"
+              class="w-6 h-6"
               role="img"
               viewBox="0 0 24 24"
               xmlns="http://www.w3.org/2000/svg"
@@ -101,10 +109,12 @@ export const prerender = true;
           <a
             href="https://app.hackthebox.com/profile/2184716"
             target="_blank"
-            class="glass-card liquid-glass rounded-xl p-3 text-gray-300 hover:text-white transition-all duration-200 backdrop-blur-md border border-gray-700/50 hover:border-gray-600/70 hover:scale-110"
+            rel="noopener noreferrer"
+            class="p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all duration-200 text-gray-300 hover:text-white"
+            aria-label="HackTheBox"
           >
             <svg
-              class="w-8 h-8"
+              class="w-6 h-6"
               role="img"
               viewBox="0 0 24 24"
               xmlns="http://www.w3.org/2000/svg"
@@ -115,15 +125,42 @@ export const prerender = true;
               />
             </svg>
           </a>
-
         </div>
       </div>
-    </section>
-    
-    <!-- Portfolio Sections -->
-    <About />
-    <Projects />
-    <Experience />
-    <Education />
+
+      <!-- Featured Blog Posts -->
+      <div class="mb-8">
+        <h2 class="text-2xl font-bold text-white mb-6 text-center">Recent Posts</h2>
+        <FeaturedPosts />
+        <div class="text-center mt-8">
+          <a
+            href="/posts"
+            class="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all duration-200 text-white hover:text-blue-400"
+          >
+            View All Posts
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Recent Projects -->
+      <FeaturedProjects />
+    </div>
   </main>
 </Layout>
+
+<style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>

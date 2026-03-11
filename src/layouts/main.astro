@@ -21,7 +21,7 @@ const {
     <meta name="keywords" content="cybersecurity, threat hunting, threat intelligence, SIEM, QRadar, security analysis, incident response" />
     <meta name="author" content="Ryan Hunt" />
     <meta name="robots" content="index, follow" />
-    <meta name="theme-color" content="#1f2937" />
+    <meta name="theme-color" content="#0a0e17" />
     <link rel="canonical" href="https://recursiive.ryanhunt.dev/" />
     
     <!-- Static fallback meta tags for social media -->
@@ -56,7 +56,7 @@ const {
     <!-- Additional meta tags for better compatibility -->
     <meta name="application-name" content="Ryan Hunt - Cybersecurity Blog" />
     <meta name="apple-mobile-web-app-title" content="Ryan Hunt Blog" />
-    <meta name="msapplication-TileColor" content="#1f2937" />
+    <meta name="msapplication-TileColor" content="#0a0e17" />
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
@@ -219,7 +219,8 @@ const {
     <link rel="icon" type="image/x-icon" href="../assets/images/favicon.png" />
     <Fragment set:html={import.meta.env.HEADER_INJECT} />
   </head>
-  <body class="antialiased bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 min-h-screen">
+  <body class="antialiased min-h-screen site-bg">
+    <div class="site-bg__mesh" aria-hidden="true"></div>
     <Dots />
     <Header />
     <slot />

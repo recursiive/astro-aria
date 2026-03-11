@@ -8,6 +8,42 @@
 
 /* Add Your Custom CSS Here */
 
+/* ===== MODERN SITE BACKGROUND ===== */
+.site-bg {
+  position: relative;
+  background: 
+    linear-gradient(165deg, #0a0e17 0%, #0f1419 22%, #0d1117 45%, #0a0e17 70%, #050810 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+.site-bg__mesh {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  overflow: hidden;
+  background: 
+    radial-gradient(ellipse 80% 50% at 20% 20%, rgba(59, 130, 246, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 80% at 85% 60%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 40% at 50% 90%, rgba(6, 182, 212, 0.06) 0%, transparent 45%),
+    radial-gradient(ellipse 70% 60% at 70% 15%, rgba(139, 92, 246, 0.05) 0%, transparent 45%);
+}
+
+.site-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 0%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 0%, transparent 70%);
+}
+
 /* ===== GLASSMORPHISM THEME ===== */
 
 /* Base glassmorphism variables */

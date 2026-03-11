@@ -1,0 +1,88 @@
+---
+import { getCollection } from "astro:content";
+import { getViewCount } from "../utils/viewCount";
+
+const allPosts = await getCollection("post");
+
+function parseDate(dateStr: string) {
+  const [month, day, year] = dateStr.split(" ");
+  return new Date(`${month} ${parseInt(day)}, ${year}`);
+}
+
+// Get view counts for all posts (fallback to 0 if unavailable)
+const postsWithViews = await Promise.all(
+  allPosts.map(async (post) => {
+    let views = 0;
+    try {
+      views = await getViewCount(post.slug);
+    } catch (error) {
+      // If view count fails, default to 0
+      views = 0;
+    }
+    return {
+      ...post,
+      views,
+      date: parseDate(post.data.dateFormatted),
+    };
+  })
+);
+
+// Sort by views (descending), then by date (descending) for tie-breaking
+// If all views are 0, effectively sorts by date
+const sortedPosts = postsWithViews
+  .filter((post) => !post.data.hidden)
+  .sort((a, b) => {
+    // If views are equal, sort by date
+    if (b.views === a.views) {
+      return b.date.getTime() - a.date.getTime();
+    }
+    // Otherwise sort by views
+    return b.views - a.views;
+  })
+  .slice(0, 4); // Get top 4 posts
+---
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+  {sortedPosts.map((post) => {
+    const postData = {
+      ...(post.data || {}),
+      slug: post.slug,
+      link: `/post/${post.slug}`,
+      topics: post.data.topic || [],
+    };
+    
+    return (
+      <a
+        href={postData.link}
+        class="group relative block p-6 glass-card liquid-glass rounded-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/10 border border-white/10 hover:border-white/20"
+      >
+        <div class="flex items-start justify-between mb-3">
+          <h3 class="text-lg font-bold text-white group-hover:text-blue-400 transition-colors duration-200 line-clamp-2 flex-1">
+            {postData.title}
+          </h3>
+          <svg
+            class="w-5 h-5 text-neutral-400 group-hover:text-blue-400 ml-2 flex-shrink-0 transition-all duration-200 group-hover:translate-x-1"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+        
+        <p class="text-sm text-neutral-400 mb-4 line-clamp-2">
+          {postData.description}
+        </p>
+        
+        <div class="flex items-center justify-between text-xs text-neutral-500">
+          <span>{postData.dateFormatted}</span>
+          {postData.topics.length > 0 && (
+            <span class="px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">
+              {postData.topics[0]}
+            </span>
+          )}
+        </div>
+      </a>
+    );
+  })}
+</div>
