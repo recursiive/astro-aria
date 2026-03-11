@@ -13,7 +13,7 @@ hidden: false
 
 # Introduction
 
-Collectively since October of 2025, I've been getting my hands on some hardware to build up my homelab. I've been able to obtain a Dell Optiplex 3050 SFF, Cisco SG300 switch, Dell Poweredge R620, and a Lenovo Thinkserver RD640 which sadly died on my shortly after purchasing it. 
+Collectively since October of 2025, I've been getting my hands on some hardware to build up my homelab. I've been able to obtain a Dell Optiplex 3050 SFF, Cisco SG300 switch, Dell Poweredge R620, and a Lenovo Thinkserver RD640 which sadly died on me shortly after purchasing it. 
 
 The goal of my homelab is to simulate a mock enterprise environment to simulate blue and red team activity, practice networking, while hosting some quality of life services that I can use on the daily. 
 
