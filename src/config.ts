@@ -1,15 +1,15 @@
 export const siteConfig = {
   name: "Ryan Hunt",
-  title: "Computer Science Student / IT Audit Intern",
+  title: "IT Auditor",
   description: "Portfolio website of Ryan Hunt",
   accentColor: "#BF5700",
   social: {
     email: "ryanahunt@proton.me",
     linkedin: "https://linkedin.com/in/ryananthunt",
     twitter: "https://x.com/temp1fyy",
-    github: "https://github.com/recursiive",
-    cyberdefenders: "https://cyberdefenders.org/p/recursiive",
-    tryhackme: "https://tryhackme.com/p/recusiive"
+    github: "https://github.com/temp1fy",
+    cyberdefenders: "https://cyberdefenders.org/p/temp1fy",
+    tryhackme: "https://tryhackme.com/p/temp1fy"
   },
   aboutMe:
     "I am a Senior Computer Science & Cybersecurity student at The University of Texas at San Antonio (UTSA) and I am currently interning as an IT Auditor. I've gained hands-on experience with risk-based IT Audit assessments, frameworks, and full-stack web developing skills.",

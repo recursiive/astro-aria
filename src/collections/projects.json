@@ -10,7 +10,7 @@
 		"name": "Stego Program",
 		"description": "Command-line steganography program to hide and extract arbitrary binary files within 8-bit grayscale BMP images by using a simple run-length encoding (RLE) scheme on each pixels LSB.",
 		"image": "/assets/images/projects/stego.png",
-		"url": "https://github.com/recursiive/steganography-project",
+		"url": "https://github.com/temp1fy/steganography-project",
 		"technologies": ["python", "bash"]
 	},
 	{
