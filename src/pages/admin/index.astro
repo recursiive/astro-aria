@@ -1,0 +1,1285 @@
+---
+import { getCollection } from 'astro:content';
+import { validateAdminSession } from '../../utils/adminAuth';
+import { Redis } from '@upstash/redis';
+
+export const prerender = false;
+
+const sessionToken = Astro.cookies.get('admin_session')?.value;
+if (!(await validateAdminSession(sessionToken))) {
+  return Astro.redirect('/admin/login');
+}
+
+// ── Redis ───────────────────────────────────────────────────
+const redis = (() => {
+  const url = import.meta.env.UPSTASH_REDIS_REST_URL;
+  const token = import.meta.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) return null;
+  return new Redis({ url, token });
+})();
+
+// ── Data ────────────────────────────────────────────────────
+interface Comment {
+  id: string;
+  username: string;
+  avatarSeed: string;
+  content: string;
+  timestamp: number;
+}
+
+interface PostStat {
+  slug: string;
+  title: string;
+  date: string;
+  hidden: boolean;
+  views: number;
+  comments: Comment[];
+  commentCount: number;
+}
+
+const rawPosts = await getCollection('post');
+const sortedPosts = rawPosts.sort(
+  (a, b) => new Date(b.data.dateFormatted).getTime() - new Date(a.data.dateFormatted).getTime()
+);
+
+const postsWithStats: PostStat[] = await Promise.all(
+  sortedPosts.map(async (post) => {
+    if (!redis) {
+      return { slug: post.slug, title: post.data.title, date: post.data.dateFormatted, hidden: post.data.hidden ?? false, views: 0, comments: [], commentCount: 0 };
+    }
+    const [viewsRaw, rawComments] = await Promise.all([
+      redis.get(`post:views:${post.slug}`),
+      redis.lrange(`post:comments:${post.slug}`, 0, -1),
+    ]);
+    const views = Number(viewsRaw || 0);
+    const comments = (rawComments as unknown[])
+      .map((c) => { try { return typeof c === 'string' ? JSON.parse(c) : c; } catch { return null; } })
+      .filter((c): c is Comment => !!c)
+      .sort((a, b) => b.timestamp - a.timestamp);
+    return { slug: post.slug, title: post.data.title, date: post.data.dateFormatted, hidden: post.data.hidden ?? false, views, comments, commentCount: comments.length };
+  })
+);
+
+// ── Aggregates ───────────────────────────────────────────────
+const totalViews    = postsWithStats.reduce((s, p) => s + p.views, 0);
+const totalComments = postsWithStats.reduce((s, p) => s + p.commentCount, 0);
+const maxViews      = Math.max(...postsWithStats.map(p => p.views), 1);
+const topPost       = [...postsWithStats].sort((a, b) => b.views - a.views)[0];
+const topByComments = [...postsWithStats].sort((a, b) => b.commentCount - a.commentCount)[0];
+
+// Recent comments across all posts (newest first, up to 12)
+const recentComments = postsWithStats
+  .flatMap(p => p.comments.map(c => ({ ...c, postSlug: p.slug, postTitle: p.title })))
+  .sort((a, b) => b.timestamp - a.timestamp)
+  .slice(0, 12);
+
+// ── Helpers ──────────────────────────────────────────────────
+function relTime(ts: number) {
+  const d = Math.floor((Date.now() - ts) / 1000);
+  if (d < 60) return 'just now';
+  if (d < 3600) return `${Math.floor(d / 60)}m ago`;
+  if (d < 86400) return `${Math.floor(d / 3600)}h ago`;
+  if (d < 604800) return `${Math.floor(d / 86400)}d ago`;
+  return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function fmtNum(n: number) {
+  if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+  return String(n);
+}
+
+function barPct(views: number) {
+  return Math.max(4, Math.round((views / maxViews) * 100));
+}
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — aria</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Ubuntu+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0e17;
+      --surface: rgba(13,17,23,0.85);
+      --surface-2: rgba(22,27,34,0.8);
+      --surface-3: rgba(30,37,46,0.7);
+      --border: rgba(255,255,255,0.07);
+      --border-soft: rgba(255,255,255,0.04);
+      --border-hover: rgba(255,255,255,0.14);
+      --text: #e2e8f0;
+      --text-muted: #64748b;
+      --text-dim: #2d3748;
+      --blue: #3b82f6;
+      --blue-light: #60a5fa;
+      --blue-glow: rgba(59,130,246,0.15);
+      --blue-dim: rgba(59,130,246,0.08);
+      --indigo-glow: rgba(99,102,241,0.12);
+      --cyan-glow: rgba(6,182,212,0.08);
+      --purple-glow: rgba(139,92,246,0.08);
+      --red: #ef4444;
+      --red-dim: rgba(239,68,68,0.08);
+      --red-border: rgba(239,68,68,0.25);
+      --green: #22c55e;
+      --green-dim: rgba(34,197,94,0.08);
+      --amber: #f59e0b;
+      --amber-dim: rgba(245,158,11,0.1);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Ubuntu Mono', 'DejaVu Sans Mono', monospace;
+      background: linear-gradient(165deg, #0a0e17 0%, #0f1419 22%, #0d1117 45%, #0a0e17 70%, #050810 100%);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Mesh gradient overlay ─────────────────────────────── */
+    .mesh {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 20%, rgba(59,130,246,0.10) 0%, transparent 50%),
+        radial-gradient(ellipse 60% 80% at 85% 60%, rgba(99,102,241,0.07) 0%, transparent 50%),
+        radial-gradient(ellipse 50% 40% at 50% 90%, rgba(6,182,212,0.05) 0%, transparent 45%),
+        radial-gradient(ellipse 70% 60% at 70% 15%, rgba(139,92,246,0.05) 0%, transparent 45%);
+    }
+
+    /* Dot grid */
+    .mesh::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 0%, transparent 70%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 0%, transparent 70%);
+    }
+
+    /* ── Layout ────────────────────────────────────────────── */
+    .layout { position: relative; z-index: 1; min-height: 100vh; }
+
+    /* ── Header ────────────────────────────────────────────── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      padding: 0 1.5rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(10,14,23,0.8);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: var(--blue-dim);
+      border: 1px solid rgba(59,130,246,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--blue-light);
+      box-shadow: 0 0 12px rgba(59,130,246,0.15);
+    }
+
+    .brand-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      letter-spacing: -0.01em;
+    }
+
+    .brand-sub {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.75rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--border-hover);
+      color: var(--text);
+      background: rgba(255,255,255,0.04);
+    }
+
+    .btn-danger {
+      border-color: var(--red-border);
+      color: #f87171;
+    }
+
+    .btn-danger:hover {
+      background: var(--red-dim);
+      border-color: rgba(239,68,68,0.4);
+    }
+
+    /* ── Main ──────────────────────────────────────────────── */
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    /* ── Section headings ─────────────────────────────────── */
+    .section-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 0.875rem;
+    }
+
+    /* ── Glass card base ──────────────────────────────────── */
+    .glass {
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+
+    /* ── Stats grid ───────────────────────────────────────── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 500px) { .stats-grid { grid-template-columns: 1fr; } }
+
+    .stat-card {
+      padding: 1.375rem 1.5rem;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      position: relative;
+      overflow: hidden;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .stat-card:nth-child(1) { animation-delay: 0.05s; }
+    .stat-card:nth-child(2) { animation-delay: 0.10s; }
+    .stat-card:nth-child(3) { animation-delay: 0.15s; }
+    .stat-card:nth-child(4) { animation-delay: 0.20s; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 60%; height: 60%;
+      border-radius: 50%;
+      opacity: 0.6;
+      filter: blur(30px);
+      pointer-events: none;
+    }
+
+    .stat-blue::before   { background: radial-gradient(circle, rgba(59,130,246,0.2), transparent 70%); }
+    .stat-indigo::before { background: radial-gradient(circle, rgba(99,102,241,0.2), transparent 70%); }
+    .stat-cyan::before   { background: radial-gradient(circle, rgba(6,182,212,0.18), transparent 70%); }
+    .stat-purple::before { background: radial-gradient(circle, rgba(139,92,246,0.18), transparent 70%); }
+
+    .stat-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+
+    .icon-blue   { background: rgba(59,130,246,0.12); color: #60a5fa; border: 1px solid rgba(59,130,246,0.2); }
+    .icon-indigo { background: rgba(99,102,241,0.12); color: #818cf8; border: 1px solid rgba(99,102,241,0.2); }
+    .icon-cyan   { background: rgba(6,182,212,0.12);  color: #22d3ee; border: 1px solid rgba(6,182,212,0.2); }
+    .icon-purple { background: rgba(139,92,246,0.12); color: #a78bfa; border: 1px solid rgba(139,92,246,0.2); }
+
+    .stat-value {
+      font-size: 1.875rem;
+      font-weight: 700;
+      color: #f8fafc;
+      line-height: 1;
+      margin-bottom: 0.375rem;
+      letter-spacing: -0.02em;
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .stat-sub {
+      font-size: 0.7rem;
+      color: #475569;
+      margin-top: 0.5rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* ── Content grid ─────────────────────────────────────── */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 1.25rem;
+      align-items: start;
+    }
+
+    @media (max-width: 1024px) { .content-grid { grid-template-columns: 1fr; } }
+
+    /* ── Chart ────────────────────────────────────────────── */
+    .chart-wrap {
+      padding: 1.25rem 1.5rem 1rem;
+      border-bottom: 1px solid var(--border-soft);
+      margin-bottom: 0.5rem;
+    }
+
+    .chart-row {
+      display: grid;
+      grid-template-columns: 140px 1fr 52px;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.3rem 0;
+    }
+
+    .chart-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .chart-bar-bg {
+      height: 6px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .chart-bar {
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, #3b82f6, #6366f1);
+      transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .chart-val {
+      font-size: 0.7rem;
+      color: #475569;
+      text-align: right;
+    }
+
+    /* ── Post list ────────────────────────────────────────── */
+    .post-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+      padding: 0.625rem 0.625rem 0.625rem;
+    }
+
+    .post-row {
+      border-radius: 12px;
+      border: 1px solid var(--border-soft);
+      background: var(--surface-2);
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .post-row:hover { border-color: var(--border); }
+    .post-row.open  { border-color: rgba(59,130,246,0.2); }
+
+    .post-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .chevron {
+      width: 14px;
+      height: 14px;
+      color: var(--text-dim);
+      flex-shrink: 0;
+      transition: transform 0.2s, color 0.2s;
+    }
+
+    .post-row.open .chevron { transform: rotate(90deg); color: var(--blue-light); }
+
+    .post-title-text {
+      flex: 1;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #cbd5e1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .post-row.open .post-title-text { color: #f1f5f9; }
+
+    .post-chips {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.65rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 99px;
+      font-weight: 600;
+    }
+
+    .chip-views   { background: rgba(59,130,246,0.1);  color: #60a5fa; border: 1px solid rgba(59,130,246,0.18); }
+    .chip-comments{ background: rgba(99,102,241,0.1);  color: #818cf8; border: 1px solid rgba(99,102,241,0.18); }
+    .chip-draft   { background: rgba(245,158,11,0.1);  color: #fbbf24; border: 1px solid rgba(245,158,11,0.2); }
+
+    .post-link {
+      display: flex;
+      align-items: center;
+      color: var(--text-dim);
+      transition: color 0.2s;
+      flex-shrink: 0;
+    }
+
+    .post-link:hover { color: var(--blue-light); }
+
+    /* ── Comment panel ────────────────────────────────────── */
+    .comments-panel {
+      display: none;
+      border-top: 1px solid var(--border-soft);
+    }
+
+    .post-row.open .comments-panel { display: block; }
+
+    .panel-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.625rem 1rem;
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .panel-count {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    .btn-clear-all {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+      border: 1px solid var(--red-border);
+      background: transparent;
+      color: #f87171;
+      font-family: inherit;
+      font-size: 0.65rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-clear-all:hover { background: var(--red-dim); }
+    .btn-clear-all:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    .comment-list { padding: 0.5rem 0.75rem 0.75rem; display: flex; flex-direction: column; gap: 0.375rem; }
+
+    .comment-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.625rem 0.75rem;
+      border-radius: 10px;
+      background: var(--surface-3);
+      border: 1px solid var(--border-soft);
+      transition: border-color 0.15s;
+    }
+
+    .comment-card:hover { border-color: var(--border); }
+
+    .c-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      overflow: hidden;
+      background: var(--blue-dim);
+    }
+
+    .c-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+    .c-avatar-fb {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: var(--blue-dim);
+      color: var(--blue-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+
+    .c-body { flex: 1; min-width: 0; }
+
+    .c-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.2rem;
+      flex-wrap: wrap;
+    }
+
+    .c-user { font-size: 0.72rem; font-weight: 700; color: #94a3b8; }
+    .c-time { font-size: 0.65rem; color: var(--text-dim); }
+    .c-content { font-size: 0.72rem; color: #94a3b8; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+
+    .btn-del {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-dim);
+      font-family: inherit;
+      font-size: 0.65rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      align-self: flex-start;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+
+    .btn-del:hover {
+      background: var(--red-dim);
+      border-color: var(--red-border);
+      color: #f87171;
+    }
+
+    .no-comments {
+      padding: 1rem;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-align: center;
+    }
+
+    /* ── Activity sidebar ─────────────────────────────────── */
+    .activity-section {
+      position: sticky;
+      top: 80px;
+    }
+
+    .activity-feed {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      max-height: calc(100vh - 200px);
+      overflow-y: auto;
+    }
+
+    .activity-feed::-webkit-scrollbar { width: 4px; }
+    .activity-feed::-webkit-scrollbar-track { background: transparent; }
+    .activity-feed::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+    .activity-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.875rem 1rem;
+      border-bottom: 1px solid var(--border-soft);
+      transition: background 0.15s;
+      position: relative;
+    }
+
+    .activity-item:last-child { border-bottom: none; }
+    .activity-item:hover { background: rgba(255,255,255,0.02); }
+
+    .a-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      overflow: hidden;
+      background: var(--blue-dim);
+    }
+
+    .a-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+    .a-avatar-fb {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: var(--blue-dim);
+      color: var(--blue-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.68rem;
+      font-weight: 700;
+    }
+
+    .a-body { flex: 1; min-width: 0; }
+
+    .a-top {
+      display: flex;
+      align-items: baseline;
+      gap: 0.4rem;
+      margin-bottom: 0.15rem;
+      flex-wrap: wrap;
+    }
+
+    .a-user { font-size: 0.72rem; font-weight: 700; color: #94a3b8; }
+    .a-on   { font-size: 0.65rem; color: var(--text-dim); }
+    .a-post { font-size: 0.65rem; color: #475569; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 120px; }
+    .a-time { font-size: 0.62rem; color: var(--text-dim); margin-left: auto; flex-shrink: 0; }
+
+    .a-preview {
+      font-size: 0.7rem;
+      color: #475569;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .a-del {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      display: none;
+      align-items: center;
+      padding: 0.2rem 0.45rem;
+      border-radius: 5px;
+      border: 1px solid var(--red-border);
+      background: var(--red-dim);
+      color: #f87171;
+      font-family: inherit;
+      font-size: 0.6rem;
+      cursor: pointer;
+    }
+
+    .activity-item:hover .a-del { display: inline-flex; }
+
+    /* ── Confirm modal ────────────────────────────────────── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(6px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: rgba(13,17,23,0.98);
+      backdrop-filter: blur(24px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 2rem;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(59,130,246,0.06);
+      animation: modalIn 0.18s ease;
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.96) translateY(8px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--red-dim);
+      border: 1px solid var(--red-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #f87171;
+      margin-bottom: 1rem;
+    }
+
+    .modal h2 { font-size: 1rem; color: #f8fafc; margin-bottom: 0.35rem; }
+    .modal p  { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.6; }
+
+    .modal-preview {
+      font-size: 0.72rem;
+      color: #475569;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.5rem 0.75rem;
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .modal-actions { display: flex; gap: 0.625rem; justify-content: flex-end; }
+
+    .btn-cancel {
+      padding: 0.55rem 1rem;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .btn-cancel:hover { border-color: var(--border-hover); color: var(--text); }
+
+    .btn-confirm {
+      padding: 0.55rem 1.1rem;
+      border-radius: 9px;
+      border: none;
+      background: #ef4444;
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-confirm:hover { background: #dc2626; }
+    .btn-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Toast ────────────────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      padding: 0.7rem 1.1rem;
+      border-radius: 10px;
+      font-size: 0.75rem;
+      font-family: inherit;
+      z-index: 200;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.success { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.25); color: #4ade80; }
+    #toast.error   { background: rgba(239,68,68,0.12);  border: 1px solid rgba(239,68,68,0.25);  color: #f87171; }
+
+    /* Entrance animations */
+    .anim-1 { animation: fadeUp 0.4s 0.1s ease both; }
+    .anim-2 { animation: fadeUp 0.4s 0.2s ease both; }
+    .anim-3 { animation: fadeUp 0.4s 0.25s ease both; }
+  </style>
+</head>
+<body>
+  <div class="mesh" aria-hidden="true"></div>
+  <div class="layout">
+
+    <!-- ── Header ──────────────────────────────────────────── -->
+    <header>
+      <div class="header-brand">
+        <div class="brand-icon">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+        </div>
+        <div>
+          <div class="brand-name">~/rhunt</div>
+          <div class="brand-sub">moderation console</div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <a href="/" class="btn-ghost" target="_blank" rel="noopener">
+          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+          View site
+        </a>
+        <button id="logout-btn" class="btn-ghost btn-danger">
+          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          Logout
+        </button>
+      </div>
+    </header>
+
+    <!-- ── Main ────────────────────────────────────────────── -->
+    <main>
+
+      <!-- Stats ───────────────────────────────────────────── -->
+      <p class="section-label">Overview</p>
+      <div class="stats-grid">
+
+        <div class="stat-card stat-blue">
+          <div class="stat-icon icon-blue">
+            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+          </div>
+          <div class="stat-value">{fmtNum(totalViews)}</div>
+          <div class="stat-label">Total views</div>
+          {topPost && <div class="stat-sub">Top: {topPost.title}</div>}
+        </div>
+
+        <div class="stat-card stat-indigo">
+          <div class="stat-icon icon-indigo">
+            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+          </div>
+          <div class="stat-value" id="total-comments-val">{totalComments}</div>
+          <div class="stat-label">Total comments</div>
+          {topByComments && topByComments.commentCount > 0 &&
+            <div class="stat-sub">Most: {topByComments.title}</div>
+          }
+        </div>
+
+        <div class="stat-card stat-cyan">
+          <div class="stat-icon icon-cyan">
+            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <div class="stat-value">{postsWithStats.length}</div>
+          <div class="stat-label">Published posts</div>
+          <div class="stat-sub">{postsWithStats.filter(p => p.hidden).length} draft(s) hidden</div>
+        </div>
+
+        <div class="stat-card stat-purple">
+          <div class="stat-icon icon-purple">
+            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+          </div>
+          <div class="stat-value">{topPost ? fmtNum(topPost.views) : '—'}</div>
+          <div class="stat-label">Top post views</div>
+          {topPost && <div class="stat-sub">{topPost.title}</div>}
+        </div>
+
+      </div>
+
+      <!-- Content grid ─────────────────────────────────────── -->
+      <div class="content-grid">
+
+        <!-- ── Posts section ─────────────────────────────── -->
+        <div>
+          <p class="section-label anim-2">Posts &amp; Comments</p>
+          <div class="glass anim-2">
+
+            <!-- Bar chart -->
+            <div class="chart-wrap">
+              <p class="section-label" style="margin-bottom:0.75rem">Views by post</p>
+              {postsWithStats.map(p => (
+                <div class="chart-row">
+                  <span class="chart-label" title={p.title}>{p.title}</span>
+                  <div class="chart-bar-bg">
+                    <div class="chart-bar" style={`width:${barPct(p.views)}%`}></div>
+                  </div>
+                  <span class="chart-val">{fmtNum(p.views)}</span>
+                </div>
+              ))}
+            </div>
+
+            <!-- Post rows -->
+            <div class="post-list" id="post-list">
+              {postsWithStats.map(post => (
+                <div class="post-row" data-slug={post.slug}>
+
+                  <div class="post-header">
+                    <svg class="chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                    <span class="post-title-text" title={post.title}>{post.title}</span>
+                    <div class="post-chips">
+                      {post.hidden && <span class="chip chip-draft">draft</span>}
+                      <span class="chip chip-views">
+                        <svg width="9" height="9" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        {fmtNum(post.views)}
+                      </span>
+                      <span class="chip chip-comments" data-comment-chip={post.slug}>
+                        <svg width="9" height="9" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                        {post.commentCount}
+                      </span>
+                    </div>
+                    <a href={`/post/${post.slug}`} target="_blank" rel="noopener" class="post-link" onclick="event.stopPropagation()">
+                      <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
+                  </div>
+
+                  <div class="comments-panel">
+                    <div class="panel-actions">
+                      <span class="panel-count" data-panel-count={post.slug}>{post.commentCount} comment{post.commentCount !== 1 ? 's' : ''}</span>
+                      {post.commentCount > 0 && (
+                        <button class="btn-clear-all" data-clear-slug={post.slug}>
+                          <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                          Clear all
+                        </button>
+                      )}
+                    </div>
+
+                    <div class="comment-list">
+                      {post.comments.length === 0 ? (
+                        <div class="no-comments">No comments yet.</div>
+                      ) : (
+                        post.comments.map(c => (
+                          <div class="comment-card" data-comment-id={c.id}>
+                            <div class="c-avatar">
+                              <img
+                                src={`https://api.dicebear.com/9.x/shapes/svg?seed=${encodeURIComponent(c.avatarSeed)}&size=28&backgroundType=gradientLinear`}
+                                alt={c.username}
+                                onerror="this.parentElement.innerHTML=`<div class='c-avatar-fb'>${c.username.charAt(0).toUpperCase()}</div>`"
+                              />
+                            </div>
+                            <div class="c-body">
+                              <div class="c-meta">
+                                <span class="c-user">{c.username}</span>
+                                <span class="c-time">{relTime(c.timestamp)}</span>
+                              </div>
+                              <div class="c-content">{c.content}</div>
+                            </div>
+                            <button class="btn-del" data-del-slug={post.slug} data-del-id={c.id} data-del-preview={c.content.slice(0,80)}>
+                              <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Recent activity sidebar ──────────────────── -->
+        <div>
+          <p class="section-label anim-3">Recent Activity</p>
+          <div class="glass anim-3 activity-section">
+            {recentComments.length === 0 ? (
+              <div style="padding:1.5rem;font-size:0.75rem;color:var(--text-dim);text-align:center;">No comments yet.</div>
+            ) : (
+              <div class="activity-feed">
+                {recentComments.map(c => (
+                  <div class="activity-item" data-comment-id={c.id}>
+                    <div class="a-avatar">
+                      <img
+                        src={`https://api.dicebear.com/9.x/shapes/svg?seed=${encodeURIComponent(c.avatarSeed)}&size=28&backgroundType=gradientLinear`}
+                        alt={c.username}
+                        onerror="this.parentElement.innerHTML=`<div class='a-avatar-fb'>${c.username.charAt(0).toUpperCase()}</div>`"
+                      />
+                    </div>
+                    <div class="a-body">
+                      <div class="a-top">
+                        <span class="a-user">{c.username}</span>
+                        <span class="a-on">on</span>
+                        <span class="a-post" title={c.postTitle}>{c.postTitle}</span>
+                        <span class="a-time">{relTime(c.timestamp)}</span>
+                      </div>
+                      <div class="a-preview">{c.content.length > 72 ? c.content.slice(0, 72) + '…' : c.content}</div>
+                    </div>
+                    <button class="a-del" data-del-slug={c.postSlug} data-del-id={c.id} data-del-preview={c.content.slice(0,80)}>
+                      Delete
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ── Confirm modal ───────────────────────────────────────── -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <div class="modal-icon">
+        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      </div>
+      <h2 id="modal-title">Delete comment?</h2>
+      <p id="modal-body">This cannot be undone.</p>
+      <div class="modal-preview" id="modal-preview"></div>
+      <div class="modal-actions">
+        <button class="btn-cancel" id="modal-cancel">Cancel</button>
+        <button class="btn-confirm" id="modal-confirm">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Toast ───────────────────────────────────────────────── -->
+  <div id="toast"></div>
+
+  <script>
+    // ── Helpers ───────────────────────────────────────────────
+    function toast(msg: string, type: 'success' | 'error' = 'success') {
+      const el = document.getElementById('toast')!;
+      el.textContent = msg;
+      el.className = `show ${type}`;
+      setTimeout(() => { el.className = ''; }, 3000);
+    }
+
+    function esc(s: string) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    // ── Post row expand/collapse ───────────────────────────────
+    document.getElementById('post-list')!.addEventListener('click', (e) => {
+      const header = (e.target as HTMLElement).closest('.post-header');
+      if (!header) return;
+      const row = header.closest<HTMLElement>('.post-row')!;
+      const wasOpen = row.classList.contains('open');
+      document.querySelectorAll('.post-row.open').forEach(r => r.classList.remove('open'));
+      if (!wasOpen) row.classList.add('open');
+    });
+
+    // ── Delete flow ───────────────────────────────────────────
+    type PendingAction =
+      | { type: 'single'; slug: string; id: string }
+      | { type: 'clear';  slug: string };
+
+    let pending: PendingAction | null = null;
+
+    function openModal(title: string, body: string, preview: string, action: PendingAction) {
+      pending = action;
+      document.getElementById('modal-title')!.textContent = title;
+      document.getElementById('modal-body')!.textContent = body;
+      document.getElementById('modal-preview')!.textContent = preview;
+      document.getElementById('modal')!.classList.add('open');
+    }
+
+    // Single delete triggers (post panel + activity feed)
+    document.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-del-id]');
+      if (!btn) return;
+      const slug    = btn.dataset.delSlug!;
+      const id      = btn.dataset.delId!;
+      const preview = btn.dataset.delPreview || '';
+      openModal('Delete comment?', 'This action is permanent and cannot be undone.', preview, { type: 'single', slug, id });
+    });
+
+    // Clear-all triggers
+    document.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-clear-slug]');
+      if (!btn) return;
+      const slug = btn.dataset.clearSlug!;
+      const count = document.querySelectorAll(`.post-row[data-slug="${slug}"] .comment-card`).length;
+      openModal(
+        `Clear all comments?`,
+        `This will permanently delete all ${count} comment${count !== 1 ? 's' : ''} on this post.`,
+        `${count} comment${count !== 1 ? 's' : ''} will be removed.`,
+        { type: 'clear', slug }
+      );
+    });
+
+    document.getElementById('modal-cancel')!.addEventListener('click', () => {
+      document.getElementById('modal')!.classList.remove('open');
+      pending = null;
+    });
+
+    document.getElementById('modal')!.addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) {
+        document.getElementById('modal')!.classList.remove('open');
+        pending = null;
+      }
+    });
+
+    document.getElementById('modal-confirm')!.addEventListener('click', async () => {
+      if (!pending) return;
+      const btn = document.getElementById('modal-confirm') as HTMLButtonElement;
+      btn.disabled = true;
+      btn.textContent = 'Deleting…';
+
+      try {
+        if (pending.type === 'single') {
+          await deleteSingle(pending.slug, pending.id);
+        } else {
+          await clearAll(pending.slug);
+        }
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Delete';
+        document.getElementById('modal')!.classList.remove('open');
+        pending = null;
+      }
+    });
+
+    // ── deleteSingle ─────────────────────────────────────────
+    async function deleteSingle(slug: string, id: string) {
+      const res = await fetch('/api/admin/comments', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug, commentId: id }),
+      });
+      if (res.status === 401) { window.location.href = '/admin/login'; return; }
+      const data = await res.json();
+      if (!res.ok) { toast(data.error || 'Delete failed.', 'error'); return; }
+
+      // Remove all DOM elements for this comment ID
+      document.querySelectorAll(`[data-comment-id="${id}"]`).forEach(el => el.remove());
+      updateCounts(slug, data.remaining ?? 0);
+      toast('Comment deleted.');
+    }
+
+    // ── clearAll ──────────────────────────────────────────────
+    async function clearAll(slug: string) {
+      // Get all comment IDs for this post
+      const cards = document.querySelectorAll<HTMLElement>(`.post-row[data-slug="${slug}"] .comment-card`);
+      const ids = Array.from(cards).map(c => c.dataset.commentId!).filter(Boolean);
+
+      let deleted = 0;
+      for (const id of ids) {
+        const res = await fetch('/api/admin/comments', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ slug, commentId: id }),
+        });
+        if (res.status === 401) { window.location.href = '/admin/login'; return; }
+        if (res.ok) {
+          document.querySelectorAll(`[data-comment-id="${id}"]`).forEach(el => el.remove());
+          deleted++;
+        }
+      }
+
+      updateCounts(slug, 0);
+
+      // Show empty state in panel
+      const commentList = document.querySelector<HTMLElement>(`.post-row[data-slug="${slug}"] .comment-list`);
+      if (commentList) {
+        commentList.innerHTML = '<div class="no-comments">No comments yet.</div>';
+      }
+
+      // Hide clear-all button
+      const clearBtn = document.querySelector<HTMLButtonElement>(`[data-clear-slug="${slug}"]`);
+      if (clearBtn) clearBtn.style.display = 'none';
+
+      toast(`Cleared ${deleted} comment${deleted !== 1 ? 's' : ''}.`);
+    }
+
+    // ── Update counts ─────────────────────────────────────────
+    function updateCounts(slug: string, remaining: number) {
+      // Chip on post header
+      const chip = document.querySelector<HTMLElement>(`[data-comment-chip="${slug}"]`);
+      if (chip) chip.innerHTML = `<svg width="9" height="9" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg> ${remaining}`;
+
+      // Panel count text
+      const panelCount = document.querySelector<HTMLElement>(`[data-panel-count="${slug}"]`);
+      if (panelCount) panelCount.textContent = `${remaining} comment${remaining !== 1 ? 's' : ''}`;
+
+      // Stats card total
+      const totalEl = document.getElementById('total-comments-val');
+      if (totalEl) {
+        const current = parseInt(totalEl.textContent || '0', 10);
+        const diff = current - (parseInt(document.querySelector<HTMLElement>(`[data-comment-chip="${slug}"]`)?.textContent?.trim() || '0', 10) - remaining);
+        // Simpler: just decrement by number removed
+        const prev = document.querySelectorAll(`.post-row[data-slug="${slug}"] .comment-card`).length;
+        // recalculate total from all chips
+        let total = 0;
+        document.querySelectorAll<HTMLElement>('[data-comment-chip]').forEach(chip => {
+          total += parseInt(chip.textContent?.trim().split(/\s+/).pop() || '0', 10);
+        });
+        totalEl.textContent = String(total);
+      }
+    }
+
+    // ── Logout ───────────────────────────────────────────────
+    document.getElementById('logout-btn')!.addEventListener('click', async () => {
+      await fetch('/api/admin/auth', { method: 'DELETE' });
+      window.location.href = '/admin/login';
+    });
+  </script>
+</body>
+</html>

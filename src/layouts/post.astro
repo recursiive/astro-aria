@@ -1,6 +1,10 @@
 ---
 import Layout from "./main.astro";
+import CommentsSection from "../components/comments-section.astro";
 const { frontmatter } = Astro.props;
+
+// Derive slug from the post's URL (set via layout frontmatter or file path)
+const slug = Astro.url.pathname.split('/').filter(Boolean).pop() || '';
 ---
 
 <Layout title={frontmatter.title}>
@@ -114,6 +118,10 @@ const { frontmatter } = Astro.props;
       </article>
       
       <aside id="table-of-contents" class="toc-sidebar"></aside>
+    </div>
+
+    <div class="px-5 lg:px-0">
+      <CommentsSection slug={slug} />
     </div>
   </main>
 
