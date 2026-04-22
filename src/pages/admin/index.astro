@@ -978,7 +978,7 @@ function barPct(views: number) {
                         </svg>
                         {fmtNum(post.views)}
                       </span>
-                      <span class="chip chip-comments" data-comment-chip={post.slug}>
+                      <span class="chip chip-comments" data-comment-chip={post.slug} data-count={post.commentCount}>
                         <svg width="9" height="9" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                         </svg>
@@ -1251,25 +1251,23 @@ function barPct(views: number) {
 
     // ── Update counts ─────────────────────────────────────────
     function updateCounts(slug: string, remaining: number) {
-      // Chip on post header
+      // Chip on post header — store count in data-count for reliable reading
       const chip = document.querySelector<HTMLElement>(`[data-comment-chip="${slug}"]`);
-      if (chip) chip.innerHTML = `<svg width="9" height="9" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg> ${remaining}`;
+      if (chip) {
+        chip.dataset.count = String(remaining);
+        chip.innerHTML = `<svg width="9" height="9" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg> ${remaining}`;
+      }
 
       // Panel count text
       const panelCount = document.querySelector<HTMLElement>(`[data-panel-count="${slug}"]`);
       if (panelCount) panelCount.textContent = `${remaining} comment${remaining !== 1 ? 's' : ''}`;
 
-      // Stats card total
+      // Recalculate total from data-count attributes (set above, reliable)
       const totalEl = document.getElementById('total-comments-val');
       if (totalEl) {
-        const current = parseInt(totalEl.textContent || '0', 10);
-        const diff = current - (parseInt(document.querySelector<HTMLElement>(`[data-comment-chip="${slug}"]`)?.textContent?.trim() || '0', 10) - remaining);
-        // Simpler: just decrement by number removed
-        const prev = document.querySelectorAll(`.post-row[data-slug="${slug}"] .comment-card`).length;
-        // recalculate total from all chips
         let total = 0;
-        document.querySelectorAll<HTMLElement>('[data-comment-chip]').forEach(chip => {
-          total += parseInt(chip.textContent?.trim().split(/\s+/).pop() || '0', 10);
+        document.querySelectorAll<HTMLElement>('[data-comment-chip]').forEach(el => {
+          total += parseInt(el.dataset.count || '0', 10);
         });
         totalEl.textContent = String(total);
       }
